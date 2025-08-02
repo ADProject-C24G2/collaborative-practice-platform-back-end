@@ -3,6 +3,6 @@ platform:
     driver-class-name: com.mysql.cj.jdbc.Driver
     host: localhost
     port: 3306
-    database: collaborative-practice-platform
+    database: collaborative_practice_platform
     username: root
     password: 123456

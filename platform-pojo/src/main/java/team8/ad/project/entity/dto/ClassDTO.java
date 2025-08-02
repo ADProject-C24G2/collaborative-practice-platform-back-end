@@ -7,8 +7,16 @@ import java.io.Serializable;
 @Data
 public class ClassDTO implements Serializable {
 
-    private int id;
     private String name;
 
+    private String description;
+
+    private String accessType;
+
+    private String Remember;
+
+    private int expirationTime;
+
+    private int maxMembers;
 
 }
