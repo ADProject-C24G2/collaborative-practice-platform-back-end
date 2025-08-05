@@ -28,6 +28,16 @@ CREATE TABLE student_answer_record (
 );
 ```
 
+```sql 学生推荐题目表
+CREATE TABLE student_recommendations (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    student_id BIGINT NOT NULL,
+    recommended_questions JSON NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_student_id (student_id)
+);
+```
+
 ```sql 手动插入部分学生作答信息
 INSERT INTO student_answer_record (student_id, question_id, is_correct, answer, timestamp) VALUES
 (1, 1, 1, 1, '2025-08-04 09:15:00'),

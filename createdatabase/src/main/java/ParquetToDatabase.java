@@ -15,6 +15,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+//exec-maven-plugin
+
 public class ParquetToDatabase {
     public static List<Group> readParquetFile(String filePath) throws IOException {
     List<Group> records = new ArrayList<>();
@@ -62,17 +64,15 @@ public class ParquetToDatabase {
             String choicesJson = "[]";
             if (record.getFieldRepetitionCount("choices") > 0) {
                 Group choicesGroup = record.getGroup("choices", 0);
-                if (choicesGroup.getFieldRepetitionCount("list") > 0) {
-                    List<String> choiceList = new ArrayList<>();
-                    int listCount = choicesGroup.getFieldRepetitionCount("list");
-                    for (int i = 0; i < listCount; i++) {
-                        Group itemGroup = choicesGroup.getGroup("list", i);
-                        if (itemGroup.getFieldRepetitionCount("item") > 0) {
-                            choiceList.add(itemGroup.getString("item", 0));
-                        }
+                int listCount = choicesGroup.getFieldRepetitionCount("list");
+                List<String> choiceList = new ArrayList<>();
+                for (int i = 0; i < listCount; i++) {
+                    Group listItemGroup = choicesGroup.getGroup("list", i);
+                    if (listItemGroup.getFieldRepetitionCount("element") > 0) {
+                        choiceList.add(listItemGroup.getString("element", 0)); // ✅ 正确访问 element
                     }
-                    choicesJson = gson.toJson(choiceList);
                 }
+                choicesJson = gson.toJson(choiceList);
             }
             pstmt.setString(3, choicesJson);
 
@@ -114,8 +114,9 @@ public class ParquetToDatabase {
 }
 
     public static void main(String[] args) {
-        String parquetFilePath = "D:\\ADproject\\parquet\\test-00000-of-00001-f0e719df791966ff.parquet";
-        String dbUrl = "jdbc:mysql://localhost:3306/questionsboard?useSSL=false";
+        // String parquetFilePath = "D:\\ADproject\\parquet\\scienceqa.parquet";
+        String parquetFilePath = "D:\\ADproject\\parquet\\scienceqa.parquet";
+        String dbUrl = "jdbc:mysql://localhost:3306/collaborative_practice_platform?useSSL=false";
         String user = "root";
         String password = "wqx021201";
 

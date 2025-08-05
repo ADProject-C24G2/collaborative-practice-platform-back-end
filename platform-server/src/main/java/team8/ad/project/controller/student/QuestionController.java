@@ -6,17 +6,24 @@ import io.swagger.annotations.ApiParam;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestBody;
+
 
 import team8.ad.project.entity.dto.AnswerRecordDTO;
 import team8.ad.project.entity.dto.DashboardDTO;
 import team8.ad.project.entity.dto.QsInform;
 import team8.ad.project.entity.dto.QsResultDTO;
+import team8.ad.project.entity.dto.RecommendResponseDTO;
+import team8.ad.project.entity.dto.RecommendationDTO;
+import team8.ad.project.entity.dto.RecommendationRequestDTO;
 import team8.ad.project.entity.dto.SelectQuestionDTO;
 import team8.ad.project.result.Result;
-import team8.ad.project.service.question.QuestionService;
+import team8.ad.project.service.student.QuestionService;
+import team8.ad.project.service.student.impl.QuestionServiceImpl;
 
 @RestController
 @RequestMapping("/student")
@@ -25,7 +32,7 @@ import team8.ad.project.service.question.QuestionService;
 public class QuestionController {
 
     @Autowired
-    private QuestionService questionService;
+    private QuestionService questionServiceImpl;
 
     @GetMapping("/viewQuestion")
     @ApiOperation("查看题目（支持关键词和题目名称，带分页，可选指定第几题）")
@@ -41,7 +48,7 @@ public class QuestionController {
         log.info("查看题目: keyword={}, questionName={}, grade={}, subject={}, topic={}, category={}, page={}, questionIndex={}", 
                 keyword, questionName, grade, subject, topic, category, page, questionIndex);
         
-        QsResultDTO<QsInform> dto = questionService.viewQuestion(keyword, questionName, grade, subject, topic, category, page, questionIndex);
+        QsResultDTO<QsInform> dto = questionServiceImpl.viewQuestion(keyword, questionName, grade, subject, topic, category, page, questionIndex);
         if (dto.getErrorMessage() != null) {
             return Result.error(dto.getErrorMessage());
         }
@@ -52,7 +59,7 @@ public class QuestionController {
     @ApiOperation("查看具体题目并做题")
     public Result<SelectQuestionDTO> selectQuestion(@ApiParam(value = "题目序号", required = true, defaultValue = "1") @RequestParam int id) {
         log.info("查看具体题目: id={}", id);
-        SelectQuestionDTO dto = questionService.getQuestionById(id);
+        SelectQuestionDTO dto = questionServiceImpl.getQuestionById(id);
         if (dto == null) {
             return Result.error("题目不存在");
         }
@@ -76,7 +83,7 @@ public class QuestionController {
         dto.setId(id);
         dto.setCorrect(correct);
         dto.setParam(param);
-        boolean success = questionService.saveAnswerRecord(dto);
+        boolean success = questionServiceImpl.saveAnswerRecord(dto);
         return success ? Result.success("答题记录保存成功") : Result.error("答题记录保存失败");
     }
 
@@ -84,7 +91,34 @@ public class QuestionController {
     @ApiOperation("获取过去7天的做题准确率")
     public Result<DashboardDTO> getDashboard() {
         log.info("获取仪表盘数据");
-        DashboardDTO dto = questionService.getDashboardData();
+        DashboardDTO dto = questionServiceImpl.getDashboardData();
         return dto != null ? Result.success(dto) : Result.error("无法获取仪表盘数据");
+    }
+
+    @GetMapping("/recommend")
+    @ApiOperation("获取当前用户做题情况")
+    public Result<RecommendationDTO> getRecommend() {
+        log.info("获取推荐数据");
+        RecommendationDTO dto = questionServiceImpl.getRecommendData();
+        return dto != null ? Result.success(dto) : Result.error("无法获取推荐数据");
+    }
+
+    @PostMapping("/recommendQuestion")
+    @ApiOperation("接收推荐题目并存储")
+    public Result<String> recommendQuestion(@RequestBody RecommendationRequestDTO dto) {
+        log.info("接收推荐题目: questionIds={}", dto.getQuestionIds());
+        if (dto.getQuestionIds() == null || dto.getQuestionIds().isEmpty()) {
+            return Result.error("推荐题目列表不能为空");
+        }
+        boolean success = questionServiceImpl.saveRecommendedQuestions(dto);
+        return success ? Result.success("推荐题目保存成功") : Result.error("推荐题目保存失败");
+    }
+
+    @GetMapping("/getRecommend")
+    @ApiOperation("获取当前用户所有推荐题目ID")
+    public Result<RecommendResponseDTO> getRecommendQuestions() {
+        log.info("获取推荐题目ID");
+        RecommendResponseDTO dto = questionServiceImpl.getRecommendQuestions();
+        return dto != null ? Result.success(dto) : Result.error("无法获取推荐题目ID");
     }
 }

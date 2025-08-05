@@ -1,6 +1,7 @@
 package team8.ad.project.result;
 
 import lombok.Data;
+import team8.ad.project.context.BaseContext;
 
 import java.io.Serializable;
 

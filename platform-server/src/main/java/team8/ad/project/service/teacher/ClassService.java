@@ -8,5 +8,5 @@ public interface ClassService {
      * Create Class
      * @param classDTO
      */
-    public void createClass(ClassDTO classDTO);
+    public String createClass(ClassDTO classDTO);
 }

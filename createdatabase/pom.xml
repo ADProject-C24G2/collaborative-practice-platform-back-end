@@ -24,12 +24,6 @@
             <artifactId>hadoop-client</artifactId>
             <version>3.3.6</version>
         </dependency>
-        <!-- Hadoop Common -->
-        <dependency>
-            <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-common</artifactId>
-            <version>3.3.6</version>
-        </dependency>
         <!-- MySQL JDBC 驱动 -->
         <dependency>
             <groupId>mysql</groupId>
