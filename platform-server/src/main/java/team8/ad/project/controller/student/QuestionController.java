@@ -16,7 +16,8 @@ import team8.ad.project.entity.dto.QsInform;
 import team8.ad.project.entity.dto.QsResultDTO;
 import team8.ad.project.entity.dto.SelectQuestionDTO;
 import team8.ad.project.result.Result;
-import team8.ad.project.service.question.QuestionService;
+import team8.ad.project.service.student.QuestionService;
+import team8.ad.project.service.student.impl.QuestionServiceImpl;
 
 @RestController
 @RequestMapping("/student")
@@ -25,7 +26,7 @@ import team8.ad.project.service.question.QuestionService;
 public class QuestionController {
 
     @Autowired
-    private QuestionService questionService;
+    private QuestionService questionServiceImpl;
 
     @GetMapping("/viewQuestion")
     @ApiOperation("查看题目（支持关键词和题目名称，带分页，可选指定第几题）")
@@ -41,7 +42,7 @@ public class QuestionController {
         log.info("查看题目: keyword={}, questionName={}, grade={}, subject={}, topic={}, category={}, page={}, questionIndex={}", 
                 keyword, questionName, grade, subject, topic, category, page, questionIndex);
         
-        QsResultDTO<QsInform> dto = questionService.viewQuestion(keyword, questionName, grade, subject, topic, category, page, questionIndex);
+        QsResultDTO<QsInform> dto = questionServiceImpl.viewQuestion(keyword, questionName, grade, subject, topic, category, page, questionIndex);
         if (dto.getErrorMessage() != null) {
             return Result.error(dto.getErrorMessage());
         }
@@ -52,7 +53,7 @@ public class QuestionController {
     @ApiOperation("查看具体题目并做题")
     public Result<SelectQuestionDTO> selectQuestion(@ApiParam(value = "题目序号", required = true, defaultValue = "1") @RequestParam int id) {
         log.info("查看具体题目: id={}", id);
-        SelectQuestionDTO dto = questionService.getQuestionById(id);
+        SelectQuestionDTO dto = questionServiceImpl.getQuestionById(id);
         if (dto == null) {
             return Result.error("题目不存在");
         }
@@ -76,7 +77,7 @@ public class QuestionController {
         dto.setId(id);
         dto.setCorrect(correct);
         dto.setParam(param);
-        boolean success = questionService.saveAnswerRecord(dto);
+        boolean success = questionServiceImpl.saveAnswerRecord(dto);
         return success ? Result.success("答题记录保存成功") : Result.error("答题记录保存失败");
     }
 
@@ -84,7 +85,7 @@ public class QuestionController {
     @ApiOperation("获取过去7天的做题准确率")
     public Result<DashboardDTO> getDashboard() {
         log.info("获取仪表盘数据");
-        DashboardDTO dto = questionService.getDashboardData();
+        DashboardDTO dto = questionServiceImpl.getDashboardData();
         return dto != null ? Result.success(dto) : Result.error("无法获取仪表盘数据");
     }
 }

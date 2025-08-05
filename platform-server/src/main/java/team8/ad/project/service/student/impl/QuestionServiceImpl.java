@@ -1,4 +1,4 @@
-package team8.ad.project.service.question;
+package team8.ad.project.service.student.impl;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -8,14 +8,14 @@ import team8.ad.project.entity.dto.AnswerRecordDTO;
 import team8.ad.project.entity.dto.DashboardDTO;
 import team8.ad.project.entity.dto.QsInform;
 import team8.ad.project.entity.entity.AnswerRecord;
-import team8.ad.project.entity.entity.Question;
 import team8.ad.project.mapper.question.QuestionMapper;
+import team8.ad.project.service.student.QuestionService;
 
 import java.time.LocalDate;
 import java.util.List;
 
 @Service
-public class QuestionService {
+public class QuestionServiceImpl implements QuestionService {
     @Autowired
     private QuestionMapper questionMapper;
 
