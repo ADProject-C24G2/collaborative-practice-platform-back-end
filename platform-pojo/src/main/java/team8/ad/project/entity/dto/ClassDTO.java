@@ -3,6 +3,7 @@ package team8.ad.project.entity.dto;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.util.List;
 
 @Data
 public class ClassDTO implements Serializable {
@@ -13,9 +14,7 @@ public class ClassDTO implements Serializable {
 
     private String accessType;
 
-    private String Remember;
-
-    private int expirationTime;
+    private List<String> date;
 
     private int maxMembers;
 

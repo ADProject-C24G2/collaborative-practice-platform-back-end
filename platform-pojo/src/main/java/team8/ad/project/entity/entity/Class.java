@@ -9,6 +9,8 @@ public class Class {
 
     private int id;
 
+    private int teacherId;
+
     private String name;
 
     private String description;
@@ -18,6 +20,8 @@ public class Class {
     private String token;
 
     private LocalDateTime accessExpiration;
+
+    private LocalDateTime accessAvailable;
 
     private int maxMembers;
 
