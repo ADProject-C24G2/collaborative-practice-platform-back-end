@@ -32,6 +32,7 @@ import team8.ad.project.service.student.QuestionService;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import com.fasterxml.jackson.core.type.TypeReference;
 
@@ -157,13 +158,26 @@ public class QuestionServiceImpl implements QuestionService {
                 })
                 .collect(Collectors.toList()));
         
-        // ✅ 触发 ML 模型调用
+        //  触发 ML 模型调用
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             HttpEntity<RecommendationDTO> request = new HttpEntity<>(dto, headers);
             ResponseEntity<String> response = restTemplate.postForEntity(mlRecommendUrl, request, String.class);
             log.info("ML服务响应: {}", response.getBody());
+            try {
+                Map<String, List<Long>> resultMap = objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+                List<Long> questionIds = resultMap.get("questionId");
+
+                if (questionIds != null && !questionIds.isEmpty()) {
+                    RecommendationRequestDTO saveDTO = new RecommendationRequestDTO();
+                    saveDTO.setQuestionIds(questionIds);
+                    saveRecommendedQuestions(saveDTO);
+                    log.info("推荐题目已保存: {}", questionIds);
+                }
+            } catch (Exception e) {
+                log.error("解析或保存推荐题目失败: {}", e.getMessage(), e);
+            }
         } catch (Exception e) {
             log.error("调用ML推荐服务失败: {}", e.getMessage(), e);
         }
