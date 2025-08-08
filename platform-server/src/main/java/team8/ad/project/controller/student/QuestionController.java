@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -25,12 +26,17 @@ import team8.ad.project.entity.dto.SelectQuestionDTO;
 import team8.ad.project.result.Result;
 import team8.ad.project.service.student.QuestionService;
 import team8.ad.project.service.student.impl.QuestionServiceImpl;
+import team8.ad.project.service.student.ClassService;
 
 @RestController
 @RequestMapping("/student")
 @Api(tags = "题目相关接口")
 @Slf4j
 public class QuestionController {
+
+    @Autowired
+    @Qualifier("studentClassServiceImpl")
+    private ClassService classServiceImpl;
 
     @Autowired
     private QuestionService questionServiceImpl;
@@ -123,4 +129,12 @@ public class QuestionController {
         RecommendResponseDTO dto = questionServiceImpl.getRecommendQuestions();
         return dto != null ? Result.success(dto) : Result.error("无法获取推荐题目ID");
     }
+
+    @GetMapping("/viewClass")
+    @ApiOperation("查看所有课程")
+    public Result<team8.ad.project.entity.dto.ListDTO<team8.ad.project.entity.dto.ClassListItemDTO>> viewClass() {
+    log.info("查看课程列表");
+    var dto = classServiceImpl.viewClass();
+    return Result.success(dto);
+}
 }
