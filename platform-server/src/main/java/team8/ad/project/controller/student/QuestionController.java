@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestBody;
 
-
+import team8.ad.project.entity.dto.AnnouncementListDTO;
 import team8.ad.project.entity.dto.AnswerRecordDTO;
 import team8.ad.project.entity.dto.AssignmentListRespDTO;
 import team8.ad.project.entity.dto.DashboardDTO;
@@ -27,6 +27,7 @@ import team8.ad.project.entity.dto.SelectQuestionDTO;
 import team8.ad.project.result.Result;
 import team8.ad.project.service.student.QuestionService;
 import team8.ad.project.service.student.impl.QuestionServiceImpl;
+import team8.ad.project.service.student.AnnouncementService;
 import team8.ad.project.service.student.AssignmentService;
 import team8.ad.project.service.student.ClassService;
 
@@ -46,6 +47,10 @@ public class QuestionController {
     @Autowired
     @Qualifier("studentAssignmentService")
     private AssignmentService assignmentService;
+
+    @Autowired
+    @Qualifier("studentAnnouncementService")
+    private AnnouncementService announcementService;
 
     @GetMapping("/viewQuestion")
     @ApiOperation("查看题目（支持关键词和题目名称，带分页，可选指定第几题）")
@@ -152,6 +157,18 @@ public class QuestionController {
         }
         log.info("查看作业列表: classId={}", classId);
         AssignmentListRespDTO dto = assignmentService.viewByClassId(classId);
+        return Result.success(dto);
+    }
+
+    @GetMapping("/selectAnnouncement")
+    @ApiOperation("根据classId获取当前用户相关公告列表")
+    public Result<AnnouncementListDTO> selectAnnouncement(
+            @ApiParam(value = "班级ID", required = true) @RequestParam Integer classId) {
+        if (classId == null) {
+            return Result.error("classId不能为空");
+        }
+        log.info("查询公告: classId={}", classId);
+        AnnouncementListDTO dto = announcementService.selectAnnouncement(classId);
         return Result.success(dto);
     }
 }
