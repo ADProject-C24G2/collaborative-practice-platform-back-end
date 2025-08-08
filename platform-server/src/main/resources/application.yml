@@ -12,7 +12,7 @@ spring:
       url: jdbc:mysql://${platform.datasource.host}:${platform.datasource.port}/${platform.datasource.database}?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
       username: ${platform.datasource.username}
       password: ${platform.datasource.password}
-
+      
 ml:
   recommend-url: http://localhost:5000/recommend
 
