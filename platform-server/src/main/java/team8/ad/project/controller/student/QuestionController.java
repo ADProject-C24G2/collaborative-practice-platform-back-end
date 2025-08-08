@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 
 import team8.ad.project.entity.dto.AnswerRecordDTO;
+import team8.ad.project.entity.dto.AssignmentListRespDTO;
 import team8.ad.project.entity.dto.DashboardDTO;
 import team8.ad.project.entity.dto.QsInform;
 import team8.ad.project.entity.dto.QsResultDTO;
@@ -26,6 +27,7 @@ import team8.ad.project.entity.dto.SelectQuestionDTO;
 import team8.ad.project.result.Result;
 import team8.ad.project.service.student.QuestionService;
 import team8.ad.project.service.student.impl.QuestionServiceImpl;
+import team8.ad.project.service.student.AssignmentService;
 import team8.ad.project.service.student.ClassService;
 
 @RestController
@@ -40,6 +42,10 @@ public class QuestionController {
 
     @Autowired
     private QuestionService questionServiceImpl;
+
+    @Autowired
+    @Qualifier("studentAssignmentService")
+    private AssignmentService assignmentService;
 
     @GetMapping("/viewQuestion")
     @ApiOperation("查看题目（支持关键词和题目名称，带分页，可选指定第几题）")
@@ -133,8 +139,19 @@ public class QuestionController {
     @GetMapping("/viewClass")
     @ApiOperation("查看所有课程")
     public Result<team8.ad.project.entity.dto.ListDTO<team8.ad.project.entity.dto.ClassListItemDTO>> viewClass() {
-    log.info("查看课程列表");
-    var dto = classServiceImpl.viewClass();
-    return Result.success(dto);
-}
+        log.info("查看课程列表");
+        var dto = classServiceImpl.viewClass();
+        return Result.success(dto);
+    }
+
+    @GetMapping("/selectClass")
+    @ApiOperation("根据classId查看作业列表")
+    public Result<AssignmentListRespDTO> viewAssignment(@ApiParam(value = "班级ID", required = true) @RequestParam Integer classId) {
+        if (classId == null) {
+            return Result.error("classId不能为空");
+        }
+        log.info("查看作业列表: classId={}", classId);
+        AssignmentListRespDTO dto = assignmentService.viewByClassId(classId);
+        return Result.success(dto);
+    }
 }

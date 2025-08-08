@@ -42,6 +42,27 @@ CREATE TABLE student_recommendations (
 );
 ```
 
+```sql
+-- 作业表
+CREATE TABLE assignment (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    class_id INT NOT NULL,
+    assignment_name VARCHAR(255) NOT NULL,
+    expire_time DATETIME,
+    create_time DATETIME,
+    whether_finish TINYINT(1) DEFAULT 0,
+    finish_time DATETIME
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 作业详情表
+CREATE TABLE assignment_details (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    assignment_id INT NOT NULL,
+    question_id INT NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+```
+
 ```sql 手动插入部分学生作答信息
 INSERT INTO student_answer_record (student_id, question_id, is_correct, answer, timestamp) VALUES
 (1, 1, 1, 1, '2025-08-04 09:15:00'),
