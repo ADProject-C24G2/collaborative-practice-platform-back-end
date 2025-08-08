@@ -160,6 +160,18 @@ public class QuestionController {
         return Result.success(dto);
     }
 
+    @GetMapping("/selectAssignment")
+    @ApiOperation("根据assignmentId获取题目列表")
+    public Result<team8.ad.project.entity.dto.ListDTO<SelectQuestionDTO>> selectAssignment(
+            @ApiParam(value = "作业ID", required = true) @RequestParam Integer assignmentId) {
+        if (assignmentId == null) {
+            return Result.error("assignmentId不能为空");
+        }
+        log.info("按作业获取题目: assignmentId={}", assignmentId);
+        var dto = assignmentService.selectQuestionsByAssignmentId(assignmentId);
+        return Result.success(dto);
+    }
+
     @GetMapping("/selectAnnouncement")
     @ApiOperation("根据classId获取当前用户相关公告列表")
     public Result<AnnouncementListDTO> selectAnnouncement(
