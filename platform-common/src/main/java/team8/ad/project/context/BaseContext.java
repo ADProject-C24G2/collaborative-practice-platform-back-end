@@ -9,7 +9,8 @@ public class BaseContext {
     }
 
     public static int getCurrentId() {
-        return threadLocal.get();
+        Integer id = threadLocal.get();
+        return (id != null) ? id : 0; // 默认返回 0
     }
 
     public static void removeCurrentId() {

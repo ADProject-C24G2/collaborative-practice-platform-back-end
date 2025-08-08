@@ -6,14 +6,21 @@ import io.swagger.annotations.ApiParam;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestBody;
+
 
 import team8.ad.project.entity.dto.AnswerRecordDTO;
 import team8.ad.project.entity.dto.DashboardDTO;
 import team8.ad.project.entity.dto.QsInform;
 import team8.ad.project.entity.dto.QsResultDTO;
+import team8.ad.project.entity.dto.RecommendResponseDTO;
+import team8.ad.project.entity.dto.RecommendationDTO;
+import team8.ad.project.entity.dto.RecommendationRequestDTO;
 import team8.ad.project.entity.dto.SelectQuestionDTO;
 import team8.ad.project.result.Result;
 import team8.ad.project.service.student.QuestionService;
@@ -87,5 +94,33 @@ public class QuestionController {
         log.info("获取仪表盘数据");
         DashboardDTO dto = questionServiceImpl.getDashboardData();
         return dto != null ? Result.success(dto) : Result.error("无法获取仪表盘数据");
+    }
+
+    // 通过全局配置url:recommend-url:来与model建立联系，需要修改application-dev.xml中的recommend-url来与ml中的url对应
+    @PutMapping("/recommend")
+    @ApiOperation("触发模型，并向模型提供训练样本(题目)")
+    public Result<RecommendationDTO> getRecommend() {
+        log.info("获取推荐数据");
+        RecommendationDTO dto = questionServiceImpl.getRecommendData();
+        return dto != null ? Result.success(dto) : Result.error("无法提供推荐数据");
+    }
+
+    @PostMapping("/recommendQuestion")
+    @ApiOperation("接收推荐题目并存储")
+    public Result<String> recommendQuestion(@RequestBody RecommendationRequestDTO dto) {
+        log.info("接收推荐题目: questionIds={}", dto.getQuestionIds());
+        if (dto.getQuestionIds() == null || dto.getQuestionIds().isEmpty()) {
+            return Result.error("推荐题目列表不能为空");
+        }
+        boolean success = questionServiceImpl.saveRecommendedQuestions(dto);
+        return success ? Result.success("推荐题目保存成功") : Result.error("推荐题目保存失败");
+    }
+
+    @GetMapping("/getRecommend")
+    @ApiOperation("获取当前用户所有推荐题目ID")
+    public Result<RecommendResponseDTO> getRecommendQuestions() {
+        log.info("获取推荐题目ID");
+        RecommendResponseDTO dto = questionServiceImpl.getRecommendQuestions();
+        return dto != null ? Result.success(dto) : Result.error("无法获取推荐题目ID");
     }
 }

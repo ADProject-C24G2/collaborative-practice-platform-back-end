@@ -1,3 +1,7 @@
+```sql
+create database collaborative_practice_platform;
+```
+
 ```sql 创建题目表
 CREATE TABLE qa (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -25,6 +29,16 @@ CREATE TABLE student_answer_record (
     is_correct TINYINT NOT NULL CHECK (is_correct IN (0, 1)),
     answer INT NOT NULL,
     timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+```sql 学生推荐题目表
+CREATE TABLE student_recommendations (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    student_id BIGINT NOT NULL,
+    recommended_questions JSON NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_student_id (student_id)
 );
 ```
 

@@ -7,4 +7,7 @@ public interface QuestionService {
     public boolean saveAnswerRecord(AnswerRecordDTO dto);
     public DashboardDTO getDashboardData();
     public SelectQuestionDTO getQuestionById(int id);
+    public RecommendationDTO getRecommendData();
+    public boolean saveRecommendedQuestions(RecommendationRequestDTO dto);
+    public RecommendResponseDTO getRecommendQuestions();
 }

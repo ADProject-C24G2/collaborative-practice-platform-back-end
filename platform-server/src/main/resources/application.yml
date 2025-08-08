@@ -13,6 +13,8 @@ spring:
       username: ${platform.datasource.username}
       password: ${platform.datasource.password}
 
+ml:
+  recommend-url: http://localhost:5000/recommend
 
 logging:
   level:
@@ -25,7 +27,7 @@ logging:
 mybatis:
   #mapper配置文件
   mapper-locations: classpath:mapper/*.xml
-  type-aliases-package: team8.ad.project.entity
+  type-aliases-package: team8.ad.project.entity.entity
   configuration:
     #开启驼峰命名
     map-underscore-to-camel-case: true

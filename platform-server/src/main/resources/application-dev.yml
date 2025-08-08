@@ -5,4 +5,4 @@ platform:
     port: 3306
     database: collaborative_practice_platform
     username: root
-    password: 123456
+    password: wqx021201
