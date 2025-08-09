@@ -5,7 +5,10 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import team8.ad.project.context.BaseContext;
+import team8.ad.project.entity.dto.AnnouncementDTO;
+import team8.ad.project.entity.entity.Announcement;
 import team8.ad.project.entity.vo.ClassVO;
+import team8.ad.project.entity.vo.StudentVO;
 import team8.ad.project.entity.vo.TeacherVO;
 import team8.ad.project.entity.dto.ClassDTO;
 import team8.ad.project.entity.entity.Tag;
@@ -105,6 +108,7 @@ public class ClassServiceImpl implements ClassService {
                 log.trace("Fetched student count: {} for class ID: {}", studentCount, clazz.getId());
 
                 // *** 修改点 3: 使用假数据设置 unreadMessages ***
+                // TODO 这里还有unread的message没有设置
                 vo.setUnreadMessages(random.nextInt(10));
                 log.trace("Assigned random unreadMessages: {} for class ID: {}", vo.getUnreadMessages(), clazz.getId());
 
@@ -130,7 +134,49 @@ public class ClassServiceImpl implements ClassService {
     }
 
 
+    /**
+     * get students in specific class
+     * @param classId
+     * @return
+     */
+    @Override
+    public List<StudentVO> getStudents(int classId) {
+        List<StudentVO> studentVOList = classMapper.getStudents(classId);
+        return studentVOList;
+    }
 
+
+    /**
+     * Create AnnouncementDTO
+     * @param announcementDTO
+     */
+    @Override
+    public void inserAnnouncement(AnnouncementDTO announcementDTO) {
+        Announcement myAnnouncement = new Announcement();
+        BeanUtils.copyProperties(announcementDTO, myAnnouncement);
+        myAnnouncement.setStatus((byte)0);
+        myAnnouncement.setTeacherId(BaseContext.getCurrentId());
+        myAnnouncement.setClassId(Integer.parseInt(announcementDTO.getClassId()));
+        myAnnouncement.setCreateTime(LocalDateTime.now());
+        if(announcementDTO.getRecipientType().equals("specific")){
+            for(int i : announcementDTO.getSpecificRecipients()){
+                myAnnouncement.setStudentId(i);
+                classMapper.insertAnnouncement(myAnnouncement);
+                log.info("successfully inserted announcement: {}", myAnnouncement);
+            }
+        }
+        else{
+            List<StudentVO> studentsId = classMapper.getStudents(Integer.parseInt(announcementDTO.getClassId()));
+            for(StudentVO studentVO : studentsId){
+                myAnnouncement.setStudentId(studentVO.getStudentId());
+                classMapper.insertAnnouncement(myAnnouncement);
+            }
+        }
+
+
+
+
+    }
 
 
     private void setTime(ClassDTO classDTO, Class myClass){

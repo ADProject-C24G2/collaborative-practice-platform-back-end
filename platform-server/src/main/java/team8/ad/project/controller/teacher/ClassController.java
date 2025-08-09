@@ -7,7 +7,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import team8.ad.project.context.BaseContext;
+import team8.ad.project.entity.dto.AnnouncementDTO;
 import team8.ad.project.entity.vo.ClassVO;
+import team8.ad.project.entity.vo.StudentVO;
 import team8.ad.project.entity.vo.TeacherVO;
 import team8.ad.project.entity.dto.ClassDTO;
 import team8.ad.project.result.Result;
@@ -62,8 +64,13 @@ public class ClassController {
         return Result.success(teacherVO);
     }
 
+    /**
+     * Get all the classes information
+     * @param count
+     * @return
+     */
     @GetMapping("/class-list") // 新增的获取班级列表接口
-    @ApiOperation("获取教师的班级列表")
+    @ApiOperation("Obtain the list of classes for the teachers")
     public Result getClassList(@RequestParam(defaultValue = "30") int count) {
         log.info("Get class list, requested count: {}", count);
         try {
@@ -85,5 +92,36 @@ public class ClassController {
             return Result.error("获取班级列表失败: " + e.getMessage());
         }
     }
+
+
+    /**
+     * Get the specific students of the class
+     * @param classId
+     * @return
+     */
+    @GetMapping("/getStudents")
+    @ApiOperation("get the specific students of the class")
+    public Result getStudent(@RequestParam(defaultValue = "30") int classId) {
+        log.info("start to get students");
+        // TODO 模拟id
+        BaseContext.setCurrentId(1);
+        int currentTeacherId = BaseContext.getCurrentId();
+        List<StudentVO> studentsVO = classService.getStudents(classId);
+        return Result.success(studentsVO);
+    }
+
+
+    @PostMapping("/make-announcement")
+    @ApiOperation("make announcement")
+    public Result makeAnnouncement(@RequestBody AnnouncementDTO announcementDTO) {
+        log.info("start to make announcement");
+        // TODO 模拟id
+        BaseContext.setCurrentId(1);
+        classService.inserAnnouncement(announcementDTO);
+        return Result.success();
+    }
+
+
+
 
 }

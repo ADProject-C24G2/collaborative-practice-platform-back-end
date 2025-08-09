@@ -4,10 +4,12 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 import org.springframework.data.repository.query.Param;
 import team8.ad.project.annotation.AutoFill;
+import team8.ad.project.entity.entity.Announcement;
 import team8.ad.project.entity.entity.Class;
 import team8.ad.project.entity.entity.Tag;
 import team8.ad.project.entity.entity.User;
 import team8.ad.project.entity.vo.ClassVO;
+import team8.ad.project.entity.vo.StudentVO;
 import team8.ad.project.enumeration.OperationType;
 
 import java.util.List;
@@ -61,4 +63,19 @@ public interface ClassMapper {
      */
     @Select("SELECT COUNT(*) FROM user_class_details WHERE class_id = #{classId}")
     int countStudentsInClass(@Param("classId") int classId);
+
+
+    /**
+     * Get the all the students id and name
+     * @param classId
+     * @return
+     */
+    @Select("SELECT u.id AS studentId, u.name AS studentName from user u left join user_class_details uc on u.id = uc.student_id where uc.class_id = #{classId} AND u.user_type != 'teacher'")
+    List<StudentVO> getStudents(int classId);
+
+    /**
+     *
+     * @param myAnnouncement
+     */
+    void insertAnnouncement(Announcement myAnnouncement);
 }

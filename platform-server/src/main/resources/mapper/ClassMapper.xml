@@ -33,5 +33,11 @@
                  )
     </insert>
 
+    <insert id="insertAnnouncement" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        INSERT INTO announcement
+            (classId, studentId, teacherId, title, content, createTime, status)
+        VALUES
+            (#{classId}, #{studentId}, #{teacherId}, #{title}, #{content}, #{createTime}, #{status})
+    </insert>
 
 </mapper>
