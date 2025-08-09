@@ -12,7 +12,7 @@ spring:
       password: ${platform.datasource.password}
       
 ml:
-  recommend-url: http://${python.base.url}:5000/recommend
+  recommend-url: http://${python.base.url:localhost}:5000/recommend
 
 logging:
   level:
