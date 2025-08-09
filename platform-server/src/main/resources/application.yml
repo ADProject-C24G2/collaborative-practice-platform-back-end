@@ -2,8 +2,6 @@ server:
   port: 8080
 
 spring:
-  profiles:
-    active: dev
   main:
     allow-circular-references: true
   datasource:
@@ -14,7 +12,7 @@ spring:
       password: ${platform.datasource.password}
       
 ml:
-  recommend-url: http://localhost:5000/recommend
+  recommend-url: http://${python.base.url}:5000/recommend
 
 logging:
   level:
