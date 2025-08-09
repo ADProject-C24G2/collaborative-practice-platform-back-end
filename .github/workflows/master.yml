@@ -1,0 +1,141 @@
+name: Build, Scan, and Deploy to ACR
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+env:
+  JAVA_VERSION: '11'
+  JAVA_DISTRIBUTION: 'microsoft'
+  ARTIFACT_PATH: 'platform-server/target/*.jar'
+
+jobs:
+  build-and-scan:
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    name: Build, SAST & SCA Scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          cache: 'maven'
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: java
+
+      - name: Build with Maven
+        run: mvn -B clean install
+
+      - name: Set Cache Week
+        id: date
+        run: echo "week=$(date +%Y-%U)" >> $GITHUB_OUTPUT
+
+      - name: Cache NVD data
+        uses: actions/cache@v4
+        with:
+          path: ~/.dependency-check/data
+          key: ${{ runner.os }}-nvd-data-${{ steps.date.outputs.week }}
+          restore-keys: |
+            ${{ runner.os }}-nvd-data-
+
+      - name: Run OWASP Dependency Check for SCA
+        run: mvn org.owasp:dependency-check-maven:check -DnvdApiKey=${{ secrets.NVD_API_KEY }}
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+
+      - name: Upload JAR artifact for deployment job
+        uses: actions/upload-artifact@v4
+        with:
+          name: java-app-jar
+          path: ${{ env.ARTIFACT_PATH }}
+
+  revert-on-failure:
+    name: Revert Commit on Failure
+    runs-on: ubuntu-latest
+    needs: build-and-scan
+    if: failure() && github.ref == 'refs/heads/master'
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository with PAT
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+
+      - name: Revert the commit
+        run: git revert HEAD --no-edit
+
+      - name: Amend commit message to indicate cause and skip CI
+        run: 'git commit --amend -m "Revert due to build failure: $(git log -1 --pretty=%B) [skip ci]"'
+
+      - name: Push the revert commit
+        run: git push
+
+  build-and-push-docker:
+    name: Build and Push Docker Image to ACR
+    runs-on: ubuntu-latest
+    needs: build-and-scan
+    if: success()
+    environment: production
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create workspace directory for artifact
+        run: mkdir -p ${{ github.workspace }}/platform-server/target
+
+      - name: Download JAR artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: java-app-jar
+          path: ${{ github.workspace }}/platform-server/target
+
+      - name: Get commit hash
+        id: vars
+        run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Log in to Azure Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ vars.ACR_LOGIN_SERVER }}
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ${{ vars.ACR_LOGIN_SERVER }}/${{ vars.ACR_REPOSITORY }}:${{ steps.vars.outputs.sha_short }}
+            ${{ vars.ACR_LOGIN_SERVER }}/${{ vars.ACR_REPOSITORY }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

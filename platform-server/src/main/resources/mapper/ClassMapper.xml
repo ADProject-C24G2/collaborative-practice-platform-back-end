@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="team8.ad.project.mapper.teacher.ClassMapper">
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        INSERT INTO `class` (
+            `name`,
+            `description`,
+            `access_type`,
+            `token`,
+            `access_available`,
+            `access_expiration`,
+            `max_members`,
+            `create_time`,
+            `update_time`,
+            `create_user`,
+            `update_user`,
+            `teacher_id`
+        ) VALUES (
+                     #{name},
+                     #{description},
+                     #{accessType},
+                     #{token},
+                     #{accessAvailable},
+                     #{accessExpiration},
+                     #{maxMembers},
+                     #{createTime},
+                     #{updateTime},
+                     #{createUser},
+                     #{updateUser},
+                    #{teacherId}
+                 )
+    </insert>
+
+
+</mapper>
