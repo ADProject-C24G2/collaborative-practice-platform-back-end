@@ -7,7 +7,7 @@ on:
   pull_request:
     branches:
       - master
-
+      
 env:
   JAVA_VERSION: '11'
   JAVA_DISTRIBUTION: 'microsoft'
@@ -16,6 +16,7 @@ env:
 
 jobs:
   build-and-sca-scan:
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
     name: Build & SCA Scan
     runs-on: ubuntu-latest
     permissions:
@@ -83,13 +84,17 @@ jobs:
       - name: Build local Docker image for scanning
         run: docker build -t ${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.sha_short }} .
 
+      - name: Create a docker network
+        run: docker network create scan-net
+
       - name: Run container in background for DAST scan
-        run: docker run -d --name app-for-scan -p 8080:8080 ${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.sha_short }}
+        run: docker run -d --name app-for-scan --network scan-net -p 8080:8080 ${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.sha_short }}
 
       - name: Run OWASP ZAP Full Scan (DAST)
         uses: zaproxy/action-full-scan@v0.10.0
         with:
-          target: 'http://localhost:8080'
+          docker_network: scan-net
+          target: 'http://app-for-scan:8080'
 
       - name: Log in to Azure Container Registry
         uses: docker/login-action@v3
