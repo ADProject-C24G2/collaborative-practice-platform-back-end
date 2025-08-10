@@ -13,13 +13,24 @@ import java.util.List;
 public interface AnnouncementMapper {
 
     @Select(
-        "SELECT title, content, createTime " +
-        "FROM announcement " +
-        "WHERE classId = #{classId} " +
-        // 发给全班（studentId IS NULL）或发给这个学生本人
-        "AND (studentId IS NULL OR studentId = #{studentId}) " +
-        "ORDER BY createTime DESC"
+    "SELECT " +
+    "  id           AS id, " +
+    "  title        AS title, " +
+    "  content      AS content, " +
+    "  createTime   AS createTime, " +
+    "  CAST(status AS SIGNED) AS status " +   // ← 关键：把 tinyint(1) 转成整型
+    "FROM announcement " +
+    "WHERE classId = #{classId} " +
+    "  AND (studentId IS NULL OR studentId = #{studentId}) " +
+    "ORDER BY createTime DESC"
     )
     List<AnnouncementItemDTO> listByClassAndStudent(@Param("classId") Integer classId,
                                                     @Param("studentId") Long studentId);
+
+    @org.apache.ibatis.annotations.Update(
+        "UPDATE announcement " +
+        "SET status = 1 " +
+        "WHERE id = #{id}"
+    )
+    int markRead(@org.apache.ibatis.annotations.Param("id") Integer id);
 }

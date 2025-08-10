@@ -39,4 +39,19 @@ public class AnnouncementServiceImpl implements AnnouncementService {
         }
         return dto;
     }
+
+    @Override
+    public String checkAnnouncement(Integer announcementId) {
+        try {
+            if (announcementId == null) return "announcementId不能为空";
+            int changed = announcementMapper.markRead(announcementId);
+            if (changed == 0) {
+                return "公告不存在或已删除";
+            }
+            return null; // 成功
+        } catch (Exception e) {
+            log.error("标记公告已读失败, id={}, err={}", announcementId, e.getMessage(), e);
+            return "标记已读失败";
+        }
+    }
 }

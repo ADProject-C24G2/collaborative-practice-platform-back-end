@@ -218,4 +218,15 @@ public class QuestionController {
         AnnouncementListDTO dto = announcementService.selectAnnouncement(classId);
         return Result.success(dto);
     }
+
+    @PostMapping("/checkAnnouncement")
+    @ApiOperation("将公告标记为已读（status=1）")
+    public Result<String> checkAnnouncement(
+            @ApiParam(value = "公告ID", required = true)
+            @RequestParam Integer announcementId) {
+
+        log.info("标记公告已读: announcementId={}", announcementId);
+        String err = announcementService.checkAnnouncement(announcementId);
+        return err == null ? Result.success("已标记为已读") : Result.error(err);
+    }
 }
