@@ -155,6 +155,15 @@ public class QuestionController {
         return Result.error(err);
     }
 
+    @PostMapping("/leaveClass")
+    @ApiOperation("离开班级")
+    public Result<String> leaveClass(
+            @ApiParam(value = "班级ID", required = true) @RequestParam Integer classId) {
+        log.info("离开班级: classId={}", classId);
+        String err = classServiceImpl.leaveClass(classId);
+        return err == null ? Result.success("已离开该班级") : Result.error(err);
+    }
+
     @GetMapping("/viewClass")
     @ApiOperation("查看所有课程")
     public Result<team8.ad.project.entity.dto.ListDTO<team8.ad.project.entity.dto.ClassListItemDTO>> viewClass() {

@@ -13,4 +13,6 @@ public interface ClassService {
      * @return 如果为 null 表示成功；否则返回失败原因
      */
     String joinClass(String accessType, String key);
+    
+    String leaveClass(Integer classId);
 }
