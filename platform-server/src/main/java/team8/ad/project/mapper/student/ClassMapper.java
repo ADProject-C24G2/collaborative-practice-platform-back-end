@@ -1,5 +1,6 @@
 package team8.ad.project.mapper.student;
 
+import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
@@ -49,4 +50,7 @@ public interface ClassMapper {
     // —— 新增：插入班级成员
     @Insert("INSERT INTO user_class_details (class_id, student_id, create_time) VALUES (#{classId}, #{studentId}, NOW())")
     int insertMember(@Param("classId") Integer classId, @Param("studentId") Long studentId);
+
+    @Delete("DELETE FROM user_class_details WHERE class_id = #{classId} AND student_id = #{studentId}")
+    int deleteMember(@Param("classId") Integer classId, @Param("studentId") Long studentId);
 }

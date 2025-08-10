@@ -102,4 +102,31 @@ public class ClassServiceImpl implements ClassService {
             team8.ad.project.context.BaseContext.removeCurrentId();
         }
     }
+    @Override
+    public String leaveClass(Integer classId) {
+    try {
+        if (classId == null) return "classId不能为空";
+        Integer currentId = BaseContext.getCurrentId();
+        if (currentId == null || currentId == 0) {
+            BaseContext.setCurrentId(1); // 设置默认 ID
+        }
+        Long studentId = (long)BaseContext.getCurrentId();
+        // 1) 是否在班级中
+        if (classMapper.existsMember(classId, studentId) <= 0) {
+            return "你不在该班级";
+        }
+
+        // 2) 删除关系
+        int rows = classMapper.deleteMember(classId, studentId);
+        if (rows <= 0) {
+            return "离开失败，请稍后重试";
+        }
+        return null; // null 表示成功
+    } catch (Exception e) {
+        log.error("离开班级失败: classId={}, err={}", classId, e.getMessage(), e);
+        return "系统异常";
+    } finally {
+        team8.ad.project.context.BaseContext.removeCurrentId();
+    }
+}
 }
