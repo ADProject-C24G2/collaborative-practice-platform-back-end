@@ -51,6 +51,7 @@ public interface ClassMapper {
     @Insert("INSERT INTO user_class_details (class_id, student_id, create_time) VALUES (#{classId}, #{studentId}, NOW())")
     int insertMember(@Param("classId") Integer classId, @Param("studentId") Long studentId);
 
+    // —— 新增: 当前学生离开班级
     @Delete("DELETE FROM user_class_details WHERE class_id = #{classId} AND student_id = #{studentId}")
     int deleteMember(@Param("classId") Integer classId, @Param("studentId") Long studentId);
 }
