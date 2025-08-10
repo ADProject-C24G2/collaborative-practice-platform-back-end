@@ -15,7 +15,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-//mvn exec:java
+//mvn clean compile exec:java
 
 public class ParquetToDatabase {
     public static List<Group> readParquetFile(String filePath) throws IOException {
@@ -114,7 +114,7 @@ public class ParquetToDatabase {
 }
 
     public static void main(String[] args) {
-        // String parquetFilePath = "D:\\ADproject\\parquet\\scienceqa.parquet";
+        // String parquetFilePath = "D:\\ADproject\\parquet\\scienceqa_new.parquet";
         String parquetFilePath = "D:\\ADproject\\parquet\\scienceqa.parquet";
         String dbUrl = "jdbc:mysql://localhost:3306/collaborative_practice_platform?useSSL=false";
         String user = "root";

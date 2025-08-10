@@ -17,6 +17,13 @@ public interface ClassMapper {
             "FROM class")
     List<ClassListItemDTO> viewClass();
 
+    @Select("SELECT c.id AS classId, c.name AS className, c.description " +
+        "FROM class c " +
+        "JOIN user_class_details ucd ON c.id = ucd.class_id " +
+        "WHERE ucd.student_id = #{studentId}")
+    List<ClassListItemDTO> viewClassByStudentId(@Param("studentId") Long studentId);
+
+
     // —— 新增：按 token 查班级（byLink）
     @Select("SELECT id, teacher_id AS teacherId, name, description, access_type AS accessType, token, " +
             "access_expiration AS accessExpiration, access_available AS accessAvailable, max_members AS maxMembers, " +

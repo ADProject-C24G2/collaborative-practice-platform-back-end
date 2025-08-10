@@ -21,11 +21,17 @@ public class ClassServiceImpl implements ClassService {
     @Autowired
     private ClassMapper classMapper;
 
+
     @Override
     public ListDTO<ClassListItemDTO> viewClass() {
         ListDTO<ClassListItemDTO> dto = new ListDTO<>();
         try {
-            dto.setList(classMapper.viewClass());
+            Integer currentId = BaseContext.getCurrentId();
+            if (currentId == null || currentId == 0) {
+                BaseContext.setCurrentId(1); // 设置默认 ID
+            }
+            Long studentId = (long)BaseContext.getCurrentId();
+            dto.setList(classMapper.viewClassByStudentId(studentId));
         } catch (Exception e) {
             log.error("查询课程失败: {}", e.getMessage(), e);
             dto.setList(Collections.emptyList());
