@@ -18,6 +18,7 @@ jobs:
   build-and-sca-scan:
     name: Build & SCA Scan
     runs-on: ubuntu-latest
+    if: github.repository == 'ADProject-C24G2/collaborative-practice-platform-back-end'
     permissions:
       contents: read
       security-events: write
