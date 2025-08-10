@@ -96,18 +96,22 @@ jobs:
 
       - name: Run container in background for DAST scan
         run: docker run -d --name app-for-scan --network scan-net -p 8080:8080 ${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.sha_short }}
-
+          
       - name: Run OWASP ZAP Full Scan (DAST)
-        uses: zaproxy/action-full-scan@v0.10.0
+        # We now explicitly command ZAP to generate an HTML report.
+        uses: zaproxy/action-full-scan@v0.12.0
         with:
+          docker_network: scan-net
           target: 'http://app-for-scan:8080'
+          cmd_options: '-r report.html'
+          allow_issue_writing: false
 
       - name: Upload DAST Scan Report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: dast-report
-          path: wrk/*.html
+          path: report.html
 
       - name: Log in to Azure Container Registry
         uses: docker/login-action@v3
