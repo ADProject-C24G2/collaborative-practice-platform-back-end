@@ -141,6 +141,20 @@ public class QuestionController {
         return dto != null ? Result.success(dto) : Result.error("无法获取推荐题目ID");
     }
 
+    @PostMapping("/joinClass")
+    @ApiOperation("加入班级(byLink 用 token；byName 用 name)")
+    public Result<String> joinClass(
+            @ApiParam(value = "加入方式: byLink/byName", required = true) @RequestParam String accessType,
+            @ApiParam(value = "凭据: byLink=token, byName=班级名称", required = true) @RequestParam String key) {
+
+        log.info("加入班级请求: accessType={}, key={}", accessType, key);
+        String err = classServiceImpl.joinClass(accessType, key);
+        if (err == null) {
+            return Result.success("加入成功");
+        }
+        return Result.error(err);
+    }
+
     @GetMapping("/viewClass")
     @ApiOperation("查看所有课程")
     public Result<team8.ad.project.entity.dto.ListDTO<team8.ad.project.entity.dto.ClassListItemDTO>> viewClass() {
