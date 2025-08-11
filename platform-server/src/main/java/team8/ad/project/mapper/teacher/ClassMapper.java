@@ -1,6 +1,8 @@
 package team8.ad.project.mapper.teacher;
 
+import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Options;
 import org.apache.ibatis.annotations.Select;
 import org.springframework.data.repository.query.Param;
 import team8.ad.project.annotation.AutoFill;
@@ -97,4 +99,24 @@ public interface ClassMapper {
      * @return
      */
     List<Question> selectQuestions(ViewQuestionDTO viewQuestionDTO, int offset, int count);
+
+
+    /**
+     * Insert assignment
+     * @param assignment
+     * @return
+     */
+    @Insert("INSERT INTO assignment (class_id, assignment_name, expire_time, create_time, whether_finish, finish_time) " +
+            "VALUES (#{classId}, #{assignmentName}, #{expireTime}, #{createTime}, #{whetherFinish}, #{finishTime})")
+    @Options(useGeneratedKeys = true, keyProperty = "id")
+    int insertAssignment(Assignment assignment);
+
+
+    /**
+     * Insert assignment and question
+     * @param details
+     * @return
+     */
+    @Insert("INSERT INTO assignment_details (assignment_id, question_id) VALUES (#{assignmentId}, #{questionId})")
+    int insertAssignmentDetails(AssignmentDetails details);
 }

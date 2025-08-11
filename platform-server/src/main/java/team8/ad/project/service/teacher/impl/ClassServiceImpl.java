@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import team8.ad.project.context.BaseContext;
 import team8.ad.project.entity.dto.AnnouncementDTO;
+import team8.ad.project.entity.dto.MakeAssignmentDTO;
 import team8.ad.project.entity.dto.ViewQuestionDTO;
 import team8.ad.project.entity.entity.*;
 import team8.ad.project.entity.entity.Class;
@@ -19,6 +20,8 @@ import team8.ad.project.entity.dto.ClassDTO;
 import team8.ad.project.mapper.teacher.ClassMapper;
 import team8.ad.project.service.teacher.ClassService;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -279,6 +282,43 @@ public class ClassServiceImpl implements ClassService {
 
         return questionVOList;
     }
+
+
+
+    public void makeAssignment(MakeAssignmentDTO dto) throws ParseException {
+        Assignment assignment = new Assignment();
+        assignment.setClassId(Long.parseLong(dto.getClassId()));
+        assignment.setAssignmentName(dto.getAssignmentName());
+
+        // Parse expire_time from ISO string to Date
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+        assignment.setExpireTime(sdf.parse(dto.getExpireTime()));
+
+        assignment.setCreateTime(new Date());
+        assignment.setWhetherFinish(0); // Default to false
+        assignment.setFinishTime(null); // Default to null
+
+        // Insert assignment and get generated ID
+        classMapper.insertAssignment(assignment);
+        Long assignmentId = assignment.getId();
+
+        // Insert assignment details for each question ID
+        List<String> questionIds = dto.getQuestionIds();
+        for (String questionIdStr : questionIds) {
+            AssignmentDetails details = new AssignmentDetails();
+            details.setAssignmentId(assignmentId);
+            details.setQuestionId(Long.parseLong(questionIdStr));
+            classMapper.insertAssignmentDetails(details);
+        }
+    }
+
+
+
+
+
+
+
+
 
 
     private void setTime(ClassDTO classDTO, Class myClass){

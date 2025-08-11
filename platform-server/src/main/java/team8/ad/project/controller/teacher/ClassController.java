@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import team8.ad.project.context.BaseContext;
 import team8.ad.project.entity.dto.AnnouncementDTO;
+import team8.ad.project.entity.dto.MakeAssignmentDTO;
 import team8.ad.project.entity.dto.ViewQuestionDTO;
 import team8.ad.project.entity.entity.Announcement;
 import team8.ad.project.entity.vo.*;
@@ -165,14 +166,19 @@ public class ClassController {
 
     /**
      * make assignment
-     * @param assignment
+     * @param dto
      * @return
      */
     @PostMapping("/make-assignment")
     @ApiOperation("make-assignment form")
-    public Result makeAssignment(@RequestBody AllArguments.Assignment assignment) {
-
-        return Result.success();
+    public Result makeAssignment(@RequestBody MakeAssignmentDTO dto) {
+        try {
+            classService.makeAssignment(dto);
+            return Result.success();
+        } catch (Exception e) {
+            // Handle exceptions appropriately, e.g., log and return error
+            return Result.error("Failed to create assignment: " + e.getMessage());
+        }
     }
 
 
