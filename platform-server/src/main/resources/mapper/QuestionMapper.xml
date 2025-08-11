@@ -3,7 +3,7 @@
 <mapper namespace="team8.ad.project.mapper.question.QuestionMapper">
 
     <select id="viewQuestion" resultType="team8.ad.project.entity.dto.QsInform">
-        SELECT id, image, question
+        SELECT id, image, question, grade, subject, topic, category
         FROM qa
         WHERE 1=1
         <if test="keyword != null and keyword != ''">
