@@ -1,28 +1,27 @@
 package team8.ad.project.service.teacher.impl;
-
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import team8.ad.project.context.BaseContext;
 import team8.ad.project.entity.dto.AnnouncementDTO;
-import team8.ad.project.entity.entity.Announcement;
-import team8.ad.project.entity.vo.ClassVO;
-import team8.ad.project.entity.vo.StudentVO;
-import team8.ad.project.entity.vo.TeacherVO;
+import team8.ad.project.entity.dto.ViewQuestionDTO;
+import team8.ad.project.entity.entity.*;
+import team8.ad.project.entity.entity.Class;
+import team8.ad.project.entity.vo.*;
 import team8.ad.project.entity.dto.ClassDTO;
-import team8.ad.project.entity.entity.Tag;
-import team8.ad.project.entity.entity.User;
 import team8.ad.project.mapper.teacher.ClassMapper;
 import team8.ad.project.service.teacher.ClassService;
-import team8.ad.project.entity.entity.Class;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @Slf4j
@@ -176,6 +175,109 @@ public class ClassServiceImpl implements ClassService {
 
 
 
+    }
+
+
+    /**
+     * get Anncouncement
+     * @param classId
+     * @return
+     */
+    @Override
+    public List<AnnouncementVO> getAnnouncement(int classId) {
+        List<Announcement> announcements = classMapper.getAnnouncement(classId);
+        List<AnnouncementVO> announcementVOList = new ArrayList<>();
+
+        // 第一步：创建每个 Announcement 对应的 VO
+        for (Announcement announcement : announcements) {
+            AnnouncementVO announcementVO = new AnnouncementVO();
+            BeanUtils.copyProperties(announcement, announcementVO);
+
+            // 初始化 students 列表，避免 null
+            announcementVO.setStudents(new ArrayList<>());
+
+            if ("specific".equals(announcement.getRecipientType())) {
+                AnnouncementVO.Student student = new AnnouncementVO.Student();
+                student.setStudentId(announcement.getStudentId());
+                String studentName = classMapper.getStudentsName(announcement.getStudentId());
+                student.setStudentName(studentName);
+                announcementVO.getStudents().add(student);
+            }
+            // 如果是 "all"，students 就是空列表
+
+            announcementVOList.add(announcementVO);
+        }
+
+        // 第二步：按 createTime 合并（相同时间的公告合并为一个）
+        // 因为不会有 all 和 specific 同时间，所以只需按 createTime 合并即可
+        List<AnnouncementVO> result = new ArrayList<>();
+        Set<LocalDateTime> processedTimes = new HashSet<>();
+
+        for (AnnouncementVO vo : announcementVOList) {
+            LocalDateTime time = vo.getCreateTime();
+
+            if (processedTimes.contains(time)) {
+                // 已处理过这个时间的公告，合并到已存在的 VO 中
+                AnnouncementVO existing = result.stream()
+                        .filter(v -> v.getCreateTime().equals(time))
+                        .findFirst()
+                        .orElse(null);
+
+                if (existing != null && "specific".equals(vo.getRecipientType())) {
+                    existing.getStudents().addAll(vo.getStudents());
+                }
+            } else {
+                // 第一次遇到这个时间，直接加入结果
+                result.add(vo);
+                processedTimes.add(time);
+            }
+        }
+
+        // 按 createTime 降序排序（最新在前）
+        result.sort((a, b) -> b.getCreateTime().compareTo(a.getCreateTime()));
+
+        return result;
+    }
+
+
+    /**
+     * Get Questions
+     * @param viewQuestionDTO
+     * @return
+     */
+    @Override
+    public List<QuestionVO> getQuestions(ViewQuestionDTO viewQuestionDTO) {
+        int offset = (viewQuestionDTO.getPage() - 1) * viewQuestionDTO.getCount();
+        List<Question> questions = classMapper.selectQuestions(viewQuestionDTO,offset,viewQuestionDTO.getCount());
+
+        if (questions.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<QuestionVO> questionVOList = new ArrayList<>();
+        for (Question question : questions) {
+            QuestionVO questionVO = new QuestionVO();
+            BeanUtils.copyProperties(question, questionVO, "choices");
+
+            String choicesJson = question.getChoices();
+            if (choicesJson != null && !choicesJson.isEmpty()) {
+                try {
+                    // ▼▼▼ 使用 Fastjson 进行解析 ▼▼▼
+                    List<String> choiceList = JSON.parseArray(choicesJson, String.class);
+                    questionVO.setChoices(choiceList);
+                } catch (JSONException e) {
+                    System.err.println("Failed to parse choices JSON with Fastjson: " + choicesJson);
+                    e.printStackTrace();
+                    questionVO.setChoices(Collections.emptyList());
+                }
+            } else {
+                questionVO.setChoices(Collections.emptyList());
+            }
+
+            questionVOList.add(questionVO);
+        }
+
+
+        return questionVOList;
     }
 
 

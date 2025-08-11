@@ -4,10 +4,9 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 import org.springframework.data.repository.query.Param;
 import team8.ad.project.annotation.AutoFill;
-import team8.ad.project.entity.entity.Announcement;
+import team8.ad.project.entity.dto.ViewQuestionDTO;
+import team8.ad.project.entity.entity.*;
 import team8.ad.project.entity.entity.Class;
-import team8.ad.project.entity.entity.Tag;
-import team8.ad.project.entity.entity.User;
 import team8.ad.project.entity.vo.ClassVO;
 import team8.ad.project.entity.vo.StudentVO;
 import team8.ad.project.enumeration.OperationType;
@@ -74,8 +73,28 @@ public interface ClassMapper {
     List<StudentVO> getStudents(int classId);
 
     /**
-     *
+     * Create Announcement
      * @param myAnnouncement
      */
     void insertAnnouncement(Announcement myAnnouncement);
+
+
+    /**
+     * Get Announcement
+     * @param classId
+     * @return
+     */
+    @Select("SELECT * from announcement where classId = #{classId}")
+    List<Announcement> getAnnouncement(int classId);
+
+
+    @Select("SELECT name from user where id = #{studentId}")
+    String getStudentsName(Integer studentId);
+
+    /**
+     * get questions
+     * @param viewQuestionDTO
+     * @return
+     */
+    List<Question> selectQuestions(ViewQuestionDTO viewQuestionDTO, int offset, int count);
 }

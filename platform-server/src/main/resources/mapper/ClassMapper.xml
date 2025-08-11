@@ -35,9 +35,60 @@
 
     <insert id="insertAnnouncement" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
         INSERT INTO announcement
-            (classId, studentId, teacherId, title, content, createTime, status)
+            (classId, studentId, teacherId, title, content, createTime, status, recipientType)
         VALUES
-            (#{classId}, #{studentId}, #{teacherId}, #{title}, #{content}, #{createTime}, #{status})
+            (#{classId}, #{studentId}, #{teacherId}, #{title}, #{content}, #{createTime}, #{status}, #{recipientType})
     </insert>
+
+
+
+    <select id="selectQuestions" resultType="team8.ad.project.entity.entity.Question">
+        SELECT id, image, question, choices, answer
+        FROM qa
+        WHERE 1=1
+
+        <if test="viewQuestionDTO.keyword != null and viewQuestionDTO.keyword != ''">
+            AND (question LIKE CONCAT('%', #{viewQuestionDTO.keyword}, '%')
+            OR hint LIKE CONCAT('%', #{viewQuestionDTO.keyword}, '%')
+            OR grade LIKE CONCAT('%', #{viewQuestionDTO.keyword}, '%')
+            OR subject LIKE CONCAT('%', #{viewQuestionDTO.keyword}, '%')
+            OR topic LIKE CONCAT('%', #{viewQuestionDTO.keyword}, '%')
+            OR category LIKE CONCAT('%', #{viewQuestionDTO.keyword}, '%'))
+        </if>
+
+        <if test="viewQuestionDTO.questionName != null and viewQuestionDTO.questionName != ''">
+            AND question LIKE CONCAT('%', #{viewQuestionDTO.questionName}, '%')
+        </if>
+
+        <if test="viewQuestionDTO.grade != null and !viewQuestionDTO.grade.isEmpty()">
+            AND grade IN
+            <foreach item="gradeItem" collection="viewQuestionDTO.grade" open="(" separator="," close=")">
+                #{gradeItem}
+            </foreach>
+        </if>
+
+        <if test="viewQuestionDTO.subject != null and !viewQuestionDTO.subject.isEmpty()">
+            AND subject IN
+            <foreach item="subjectItem" collection="viewQuestionDTO.subject" open="(" separator="," close=")">
+                #{subjectItem}
+            </foreach>
+        </if>
+
+        <if test="viewQuestionDTO.topic != null and !viewQuestionDTO.topic.isEmpty()">
+            AND topic IN
+            <foreach item="topicItem" collection="viewQuestionDTO.topic" open="(" separator="," close=")">
+                #{topicItem}
+            </foreach>
+        </if>
+
+        <if test="viewQuestionDTO.category != null and !viewQuestionDTO.category.isEmpty()">
+            AND category IN
+            <foreach item="categoryItem" collection="viewQuestionDTO.category" open="(" separator="," close=")">
+                #{categoryItem}
+            </foreach>
+        </if>
+
+        LIMIT #{count} OFFSET #{offset}
+    </select>
 
 </mapper>

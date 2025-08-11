@@ -115,10 +115,10 @@ public class ParquetToDatabase {
 
     public static void main(String[] args) {
         // String parquetFilePath = "D:\\ADproject\\parquet\\scienceqa.parquet";
-        String parquetFilePath = "D:\\ADproject\\parquet\\scienceqa.parquet";
+        String parquetFilePath = "C:\\ADproject\\parquet\\scienceqa.parquet";
         String dbUrl = "jdbc:mysql://localhost:3306/collaborative_practice_platform?useSSL=false";
         String user = "root";
-        String password = "wqx021201";
+        String password = "123456";
 
         try {
             List<Group> records = readParquetFile(parquetFilePath);

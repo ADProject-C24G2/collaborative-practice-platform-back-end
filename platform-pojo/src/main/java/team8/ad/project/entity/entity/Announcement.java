@@ -16,6 +16,8 @@ public class Announcement {
     private String content;        // 公告内容
     private LocalDateTime createTime; // 创建时间
     private Byte status;           // 状态：0=未读，1=已读
+    private String recipientType;
+
 }
 
 
