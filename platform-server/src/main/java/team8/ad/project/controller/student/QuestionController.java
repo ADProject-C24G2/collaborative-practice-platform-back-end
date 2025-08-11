@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -13,8 +14,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestBody;
 
-
+import team8.ad.project.entity.dto.AnnouncementListDTO;
 import team8.ad.project.entity.dto.AnswerRecordDTO;
+import team8.ad.project.entity.dto.AssignmentListRespDTO;
 import team8.ad.project.entity.dto.DashboardDTO;
 import team8.ad.project.entity.dto.QsInform;
 import team8.ad.project.entity.dto.QsResultDTO;
@@ -25,6 +27,9 @@ import team8.ad.project.entity.dto.SelectQuestionDTO;
 import team8.ad.project.result.Result;
 import team8.ad.project.service.student.QuestionService;
 import team8.ad.project.service.student.impl.QuestionServiceImpl;
+import team8.ad.project.service.student.AnnouncementService;
+import team8.ad.project.service.student.AssignmentService;
+import team8.ad.project.service.student.ClassService;
 
 @RestController
 @RequestMapping("/student")
@@ -33,7 +38,19 @@ import team8.ad.project.service.student.impl.QuestionServiceImpl;
 public class QuestionController {
 
     @Autowired
+    @Qualifier("studentClassServiceImpl")
+    private ClassService classServiceImpl;
+
+    @Autowired
     private QuestionService questionServiceImpl;
+
+    @Autowired
+    @Qualifier("studentAssignmentService")
+    private AssignmentService assignmentService;
+
+    @Autowired
+    @Qualifier("studentAnnouncementService")
+    private AnnouncementService announcementService;
 
     @GetMapping("/viewQuestion")
     @ApiOperation("查看题目（支持关键词和题目名称，带分页，可选指定第几题）")
@@ -122,5 +139,94 @@ public class QuestionController {
         log.info("获取推荐题目ID");
         RecommendResponseDTO dto = questionServiceImpl.getRecommendQuestions();
         return dto != null ? Result.success(dto) : Result.error("无法获取推荐题目ID");
+    }
+
+    @PostMapping("/joinClass")
+    @ApiOperation("加入班级(byLink 用 token；byName 用 name)")
+    public Result<String> joinClass(
+            @ApiParam(value = "加入方式: byLink/byName", required = true) @RequestParam String accessType,
+            @ApiParam(value = "凭据: byLink=token, byName=班级名称", required = true) @RequestParam String key) {
+
+        log.info("加入班级请求: accessType={}, key={}", accessType, key);
+        String err = classServiceImpl.joinClass(accessType, key);
+        if (err == null) {
+            return Result.success("加入成功");
+        }
+        return Result.error(err);
+    }
+
+    @PostMapping("/leaveClass")
+    @ApiOperation("离开班级")
+    public Result<String> leaveClass(
+            @ApiParam(value = "班级ID", required = true) @RequestParam Integer classId) {
+        log.info("离开班级: classId={}", classId);
+        String err = classServiceImpl.leaveClass(classId);
+        return err == null ? Result.success("已离开该班级") : Result.error(err);
+    }
+
+    @GetMapping("/viewClass")
+    @ApiOperation("查看所有课程")
+    public Result<team8.ad.project.entity.dto.ListDTO<team8.ad.project.entity.dto.ClassListItemDTO>> viewClass() {
+        log.info("查看课程列表");
+        var dto = classServiceImpl.viewClass();
+        return Result.success(dto);
+    }
+
+    @GetMapping("/selectClass")
+    @ApiOperation("根据classId查看作业列表")
+    public Result<AssignmentListRespDTO> viewAssignment(@ApiParam(value = "班级ID", required = true) @RequestParam Integer classId) {
+        if (classId == null) {
+            return Result.error("classId不能为空");
+        }
+        log.info("查看作业列表: classId={}", classId);
+        AssignmentListRespDTO dto = assignmentService.viewByClassId(classId);
+        return Result.success(dto);
+    }
+
+    @GetMapping("/selectAssignment")
+    @ApiOperation("根据assignmentId获取题目列表")
+    public Result<team8.ad.project.entity.dto.ListDTO<SelectQuestionDTO>> selectAssignment(
+            @ApiParam(value = "作业ID", required = true) @RequestParam Integer assignmentId) {
+        if (assignmentId == null) {
+            return Result.error("assignmentId不能为空");
+        }
+        log.info("按作业获取题目: assignmentId={}", assignmentId);
+        var dto = assignmentService.selectQuestionsByAssignmentId(assignmentId);
+        return Result.success(dto);
+    }
+
+    @GetMapping("/submitAssignment")
+    @ApiOperation("提交作业:根据assignmentId返回题目列表(id/question/choices/image)")
+    public Result<team8.ad.project.entity.dto.ListDTO<team8.ad.project.entity.dto.SubmitQuestionDTO>> submitAssignment(
+            @ApiParam(value = "作业ID", required = true) @RequestParam Integer assignmentId) {
+        if (assignmentId == null) {
+            return Result.error("assignmentId不能为空");
+        }
+        log.info("Submit Assignment: assignmentId={}", assignmentId);
+        var dto = assignmentService.submitAssignment(assignmentId);
+        return Result.success(dto);
+    }
+
+    @GetMapping("/selectAnnouncement")
+    @ApiOperation("根据classId获取当前用户相关公告列表")
+    public Result<AnnouncementListDTO> selectAnnouncement(
+            @ApiParam(value = "班级ID", required = true) @RequestParam Integer classId) {
+        if (classId == null) {
+            return Result.error("classId不能为空");
+        }
+        log.info("查询公告: classId={}", classId);
+        AnnouncementListDTO dto = announcementService.selectAnnouncement(classId);
+        return Result.success(dto);
+    }
+
+    @PostMapping("/checkAnnouncement")
+    @ApiOperation("将公告标记为已读（status=1）")
+    public Result<String> checkAnnouncement(
+            @ApiParam(value = "公告ID", required = true)
+            @RequestParam Integer announcementId) {
+
+        log.info("标记公告已读: announcementId={}", announcementId);
+        String err = announcementService.checkAnnouncement(announcementId);
+        return err == null ? Result.success("已标记为已读") : Result.error(err);
     }
 }
