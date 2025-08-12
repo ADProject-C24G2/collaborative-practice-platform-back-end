@@ -1,3 +1,46 @@
+server:
+  port: 8080
+
 spring:
-  profiles:
-    active: dev  # 激活 dev 配置
+  main:
+    allow-circular-references: true
+
+  # 使用 Druid 数据源（你已经引入了 druid-spring-boot-starter）
+  datasource:
+    druid:
+      driver-class-name: ${platform.datasource.driver-class-name}
+      url: jdbc:mysql://${platform.datasource.host}:${platform.datasource.port}/${platform.datasource.database}?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
+      username: ${platform.datasource.username}
+      password: ${platform.datasource.password}
+
+# 你自定义的一层：只用来集中管理数据库变量
+platform:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    host: localhost
+    port: 3306
+    database: collaborative_practice_platform
+    username: root
+    password: password
+
+# 机器学习服务的地址（可用环境变量 python.base.url 覆盖）
+ml:
+  recommend-url: http://${python.base.url:localhost}:5000/recommend
+
+logging:
+  level:
+    # 建议按你自己的包名来打日志级别
+    team8:
+      ad:
+        project:
+          mapper: debug
+          service: info
+          controller: info
+
+mybatis:
+  # mapper 配置文件路径（支持多模块/多级目录）
+  mapper-locations: classpath*:mapper/**/*.xml
+  type-aliases-package: team8.ad.project.entity.entity
+  configuration:
+    # 开启驼峰命名
+    map-underscore-to-camel-case: true
