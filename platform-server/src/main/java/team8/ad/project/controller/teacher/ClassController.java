@@ -176,7 +176,6 @@ public class ClassController {
             classService.makeAssignment(dto);
             return Result.success();
         } catch (Exception e) {
-            // Handle exceptions appropriately, e.g., log and return error
             return Result.error("Failed to create assignment: " + e.getMessage());
         }
     }

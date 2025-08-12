@@ -1,10 +1,6 @@
 package team8.ad.project.service.teacher.impl;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONException;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -288,11 +284,11 @@ public class ClassServiceImpl implements ClassService {
     public void makeAssignment(MakeAssignmentDTO dto) throws ParseException {
         Assignment assignment = new Assignment();
         assignment.setClassId(Long.parseLong(dto.getClassId()));
-        assignment.setAssignmentName(dto.getAssignmentName());
+        assignment.setAssignmentName(dto.getTitle());
 
         // Parse expire_time from ISO string to Date
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
-        assignment.setExpireTime(sdf.parse(dto.getExpireTime()));
+        assignment.setExpireTime(sdf.parse(dto.getExpire_time()));
 
         assignment.setCreateTime(new Date());
         assignment.setWhetherFinish(0); // Default to false
