@@ -24,6 +24,7 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service("teacherClassService")
 @Slf4j
@@ -366,6 +367,51 @@ public class ClassServiceImpl implements ClassService {
     }
 
 
+    /**
+     * Get student assignment status
+     * @param classId
+     * @return
+     */
+    @Override
+    public List<AssignmentStatusVO> getAssignmentStatus(int classId) {
+        // Step 1: Get all assignments for the given class.
+        List<Assignment> assignments = classMapper.findAssignmentsByClassId(classId);
+
+        // This will be our final result list.
+        List<AssignmentStatusVO> resultList = new ArrayList<>();
+
+        // Step 2: For each assignment, get its submission details.
+        for (Assignment assignment : assignments) {
+            // Create the top-level assignment VO.
+            AssignmentStatusVO assignmentStatusVO = new AssignmentStatusVO();
+            assignmentStatusVO.setAssignmentName(assignment.getAssignmentName());
+
+            // Get all submission details for the current assignment's ID.
+            List<SubmissionDetailDTO> submissionDetails = classMapper.findSubmissionDetailsByAssignmentId(assignment.getId());
+
+            // Step 3: Map the flat list of DTOs to a list of SubmissionVOs.
+            List<SubmissionVO> submissionVOs = submissionDetails.stream().map(dto -> {
+                SubmissionVO submissionVO = new SubmissionVO();
+                submissionVO.setKey(String.valueOf(dto.getStudentId())); // Use student ID as the key
+                submissionVO.setStudentId(String.valueOf(dto.getStudentId()));
+                submissionVO.setStudentName(dto.getStudentName());
+                submissionVO.setWhetherFinish(dto.getWhetherFinish());
+                submissionVO.setAccuracy(dto.getAccuracy());
+                submissionVO.setFinishTime(dto.getFinishTime()); // Ensure this is formatted as a String if needed
+                return submissionVO;
+            }).collect(Collectors.toList());
+
+            // Set the list of submissions into our assignment VO.
+            assignmentStatusVO.setSubmissions(submissionVOs);
+
+            // Add the fully constructed assignment VO to our result list.
+            resultList.add(assignmentStatusVO);
+        }
+
+        return resultList;
+    }
+
+
     public void makeAssignment(MakeAssignmentDTO dto) throws ParseException {
         Assignment assignment = new Assignment();
         assignment.setClassId(Long.parseLong(dto.getClassId()));
@@ -381,14 +427,14 @@ public class ClassServiceImpl implements ClassService {
 
         // Insert assignment and get generated ID
         classMapper.insertAssignment(assignment);
-        Long assignmentId = assignment.getId();
+        Integer assignmentId = assignment.getId();
 
         // Insert assignment details for each question ID
         List<String> questionIds = dto.getQuestionIds();
         for (String questionIdStr : questionIds) {
             AssignmentDetails details = new AssignmentDetails();
             details.setAssignmentId(assignmentId);
-            details.setQuestionId(Long.parseLong(questionIdStr));
+            details.setQuestionId(Integer.parseInt(questionIdStr));
             classMapper.insertAssignmentDetails(details);
         }
     }

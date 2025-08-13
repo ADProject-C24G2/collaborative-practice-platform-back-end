@@ -212,5 +212,17 @@ public class ClassController {
         return Result.success();
     }
 
+    /**
+     * Get Student Assignment Status
+     * @param classId
+     * @return
+     */
+    @GetMapping("/assignment-status")
+    @ApiOperation("Student Assignment Status")
+    public Result assignmentStatus(@RequestParam int classId){
+        List<AssignmentStatusVO> assignmentStatusVOS = classService.getAssignmentStatus(classId);
+        return Result.success(assignmentStatusVOS);
+    }
+
 
 }

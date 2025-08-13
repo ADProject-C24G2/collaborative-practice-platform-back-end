@@ -4,7 +4,7 @@ import lombok.Data;
 
 @Data
 public class AssignmentDetails {
-    private Long id;
-    private Long assignmentId;
-    private Long questionId;
+    private Integer id;
+    private Integer assignmentId;
+    private Integer questionId;
 }

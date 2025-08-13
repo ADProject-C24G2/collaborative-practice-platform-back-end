@@ -103,4 +103,30 @@
              #{hint}, #{task}, #{skill}, #{lecture}, #{solution})
     </insert>
 
+
+
+    <select id="findAssignmentsByClassId" resultType="team8.ad.project.entity.entity.Assignment">
+        SELECT
+            id, class_id, assignment_name
+        FROM
+            assignment
+        WHERE
+            class_id = #{classId}
+    </select>
+
+    <select id="findSubmissionDetailsByAssignmentId" resultType="team8.ad.project.entity.dto.SubmissionDetailDTO">
+        SELECT
+            asd.studentId AS studentId,
+            s.name AS studentName,
+            asd.whetherFinish,
+            asd.finishTime,
+            asd.Accurancy AS accuracy  -- Mapping the typo 'Accurancy' to 'accuracy'
+        FROM
+            assignment_students_details asd
+                LEFT JOIN
+            user s ON asd.studentId = s.id -- Assuming a 'students' table with 'id' and 'name'
+        WHERE
+            asd.assignmentId = #{assignmentId}
+    </select>
+
 </mapper>

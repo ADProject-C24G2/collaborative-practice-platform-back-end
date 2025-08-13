@@ -6,7 +6,7 @@ import java.util.Date;
 
 @Data
 public class Assignment {
-    private Long id;
+    private Integer id;
     private Long classId;
     private String assignmentName;
     private Date expireTime;
