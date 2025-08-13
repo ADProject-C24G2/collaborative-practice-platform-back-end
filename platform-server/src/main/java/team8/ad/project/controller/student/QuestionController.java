@@ -18,7 +18,6 @@ import team8.ad.project.entity.dto.*;
 import team8.ad.project.entity.vo.LoginResultVO;
 import team8.ad.project.result.Result;
 import team8.ad.project.service.student.QuestionService;
-import team8.ad.project.service.student.impl.QuestionServiceImpl;
 import team8.ad.project.service.student.AnnouncementService;
 import team8.ad.project.service.student.AssignmentService;
 import team8.ad.project.service.student.ClassService;
@@ -47,9 +46,6 @@ public class QuestionController {
     @Autowired
     @Qualifier("studentAnnouncementService")
     private AnnouncementService announcementService;
-
-    @Autowired
-    private ClassService classService;
 
 
     @GetMapping("/viewQuestion")
@@ -259,6 +255,6 @@ public class QuestionController {
     @PostMapping("/login")
     @ApiOperation("学生用户登录")
     public LoginResultVO login(@RequestBody LoginDTO loginDTO, HttpSession session) {
-        return classService.login(loginDTO, session);
+        return classServiceImpl.login(loginDTO, session);
     }
 }
