@@ -340,6 +340,11 @@ public class ClassServiceImpl implements ClassService {
         return Result.success(user);
     }
 
+    /**
+     * upload question
+     * @param questionDTO
+     */
+
     @Override
     public void uploadQuestion(QuestionDTO questionDTO) {
         Question questionEntity = new Question();

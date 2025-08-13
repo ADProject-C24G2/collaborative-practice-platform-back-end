@@ -10,4 +10,8 @@ public interface QuestionService {
     public RecommendationDTO getRecommendData();
     public boolean saveRecommendedQuestions(RecommendationRequestDTO dto);
     public RecommendResponseDTO getRecommendQuestions();
+
+    String register(RegisterDTO registerDTO);
+
+    void uploadQuestion(QuestionDTO quesionDTO);
 }
