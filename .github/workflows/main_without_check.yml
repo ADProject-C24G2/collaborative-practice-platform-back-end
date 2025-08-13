@@ -1,4 +1,4 @@
-name: Build, Scan, and Deploy to ACR
+name: Build, Deploy to ACR
 
 on:
   workflow_dispatch:
