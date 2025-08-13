@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import team8.ad.project.context.BaseContext;
 import team8.ad.project.entity.dto.AssignmentItemDTO;
 import team8.ad.project.entity.dto.AssignmentListRespDTO;
 import team8.ad.project.entity.dto.ListDTO;
@@ -123,5 +124,10 @@ public class AssignmentServiceImpl implements AssignmentService {
             dto.setList(Collections.emptyList());
         }
         return dto;
+    }
+    private long currentUserIdOrThrow() {
+        Integer id = BaseContext.getCurrentId();
+        if (id == null || id <= 0) throw new IllegalStateException("未登录");
+        return id.longValue();
     }
 }
