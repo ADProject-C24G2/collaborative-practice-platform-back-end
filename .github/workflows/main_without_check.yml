@@ -2,9 +2,7 @@ name: Build, Deploy to ACR
 
 on:
   workflow_dispatch:
-    branches:
-      - master
-
+  
 env:
   JAVA_VERSION: '11'
   JAVA_DISTRIBUTION: 'microsoft'
