@@ -11,12 +11,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import team8.ad.project.context.BaseContext;
 import team8.ad.project.entity.dto.AssignmentItemDTO;
 import team8.ad.project.entity.dto.AssignmentListRespDTO;
+import team8.ad.project.entity.dto.AssignmentProgressDTO;
 import team8.ad.project.entity.dto.ListDTO;
 import team8.ad.project.entity.dto.SelectQuestionDTO;
 import team8.ad.project.entity.dto.SubmitQuestionDTO;
+import team8.ad.project.entity.entity.AssignmentStudentsDetails;
 import team8.ad.project.entity.entity.Question;
 import team8.ad.project.mapper.student.AssignmentDetailMapper;
 import team8.ad.project.mapper.student.AssignmentMapper;
+import team8.ad.project.mapper.student.AssignmentStudentsDetailsMapper;
 import team8.ad.project.mapper.student.AssignmentSubmitMapper;
 import team8.ad.project.service.student.AssignmentService;
 import team8.ad.project.service.student.QuestionService;
@@ -45,6 +48,10 @@ public class AssignmentServiceImpl implements AssignmentService {
     @Autowired
     @Qualifier("studentAssignmentDetailMapper")
     private AssignmentDetailMapper assignmentDetailMapper;
+
+    @Autowired
+    @Qualifier("studentAssignmentStudentsDetailsMapper")
+    private AssignmentStudentsDetailsMapper assignmentStudentsDetailsMapper;
 
     @Override
     public AssignmentListRespDTO viewByClassId(Integer classId) {
@@ -125,6 +132,36 @@ public class AssignmentServiceImpl implements AssignmentService {
         }
         return dto;
     }
+
+    @Override
+    public String saveOrUpdateAssignmentProgress(AssignmentProgressDTO dto) {
+        try {
+            if (dto == null || dto.getAssignmentId() == null) return "assignmentId不能为空";
+            if (dto.getWhetherFinish() == null || (dto.getWhetherFinish() != 0 && dto.getWhetherFinish() != 1)) {
+                return "whetherFinish只能是0或1";
+            }
+            if (dto.getAccuracy() == null) return "accuracy不能为空";
+
+            // 从 BaseContext（由 Session 拦截器注入）拿当前用户
+            Integer cur = team8.ad.project.context.BaseContext.getCurrentId();
+            if (cur == null || cur <= 0) return "用户未登录";
+
+            AssignmentStudentsDetails row = new AssignmentStudentsDetails();
+            row.setAssignmentId(dto.getAssignmentId());
+            row.setStudentId(cur.longValue());
+            row.setWhetherFinish(dto.getWhetherFinish());
+            row.setFinishTime(java.time.LocalDateTime.now());
+            row.setAccurancy(dto.getAccuracy()); // 列名Accurancy
+
+            int affected = assignmentStudentsDetailsMapper.upsert(row);
+            if (affected <= 0) return "保存失败，请稍后重试";
+            return null; // null 表示成功
+        } catch (Exception e) {
+            log.error("保存作业完成状态失败: dto={}, err={}", dto, e.getMessage(), e);
+            return "系统异常";
+        }
+    }
+
     private long currentUserIdOrThrow() {
         Integer id = BaseContext.getCurrentId();
         if (id == null || id <= 0) throw new IllegalStateException("未登录");
