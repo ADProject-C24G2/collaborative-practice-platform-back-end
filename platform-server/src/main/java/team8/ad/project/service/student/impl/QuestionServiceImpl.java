@@ -107,47 +107,36 @@ public class QuestionServiceImpl implements QuestionService {
 
 
     public boolean saveAnswerRecord(AnswerRecordDTO dto) {
-        Integer currentId = BaseContext.getCurrentId();
-        if (currentId == null || currentId == 0) {
-            BaseContext.setCurrentId(1); // 设置默认 ID
-        }
+        long studentId = currentUserIdOrThrow();
         AnswerRecord record = new AnswerRecord();
-        record.setStudentId((long) BaseContext.getCurrentId());
+        record.setStudentId(studentId);
         record.setQuestionId((long) dto.getId());
         record.setIsCorrect(dto.getCorrect());
         record.setAnswer(dto.getParam());
         // timestamp 由数据库自动设置
-        BaseContext.removeCurrentId();
         return questionMapper.saveAnswerRecord(record) > 0;
     }
 
     public DashboardDTO getDashboardData() {
-        Integer currentId = BaseContext.getCurrentId();
-        if (currentId == null || currentId == 0) {
-            BaseContext.setCurrentId(1); // 设置默认 ID
-        }
+        long studentId = currentUserIdOrThrow();
         DashboardDTO dto = new DashboardDTO();
         LocalDate today = LocalDate.now();
         dto.setAccuracyRates(new Double[7]);
 
         for (int i = 0; i < 7; i++) {
             LocalDate date = today.minusDays(i);
-            List<AnswerRecord> records = questionMapper.getRecordsByStudentAndDate((long) BaseContext.getCurrentId(), date);
+            List<AnswerRecord> records = questionMapper.getRecordsByStudentAndDate(studentId, date);
             long total = records.size();
             long correct = records.stream().filter(r -> r.getIsCorrect() == 1).count();
             double accuracy = (total > 0) ? (double) correct / total : 0.0;
             dto.getAccuracyRates()[i] = accuracy;
         }
-        BaseContext.removeCurrentId();
         return dto;
     }
 
     public RecommendationDTO getRecommendData() {
-        Integer currentId = BaseContext.getCurrentId();
-        if (currentId == null || currentId == 0) {
-            BaseContext.setCurrentId(1); // 设置默认 ID
-        }
-        List<AnswerRecord> records = questionMapper.getRecordsByStudent((long) BaseContext.getCurrentId());
+        long studentId = currentUserIdOrThrow();
+        List<AnswerRecord> records = questionMapper.getRecordsByStudent(studentId);
         RecommendationDTO dto = new RecommendationDTO();
         dto.setRecords(records.stream()
                 .map(r -> {
@@ -182,23 +171,19 @@ public class QuestionServiceImpl implements QuestionService {
             log.error("调用ML推荐服务失败: {}", e.getMessage(), e);
         }
 
-        BaseContext.removeCurrentId();
         return dto;
     }
 
     public boolean saveRecommendedQuestions(RecommendationRequestDTO dto) {
-        Integer currentId = BaseContext.getCurrentId();
-        if (currentId == null || currentId == 0) {
-            BaseContext.setCurrentId(1); // 设置默认 ID
-        }
+        long studentId = currentUserIdOrThrow();
         try {
             ObjectMapper objectMapper = new ObjectMapper();
             String jsonQuestions = objectMapper.writeValueAsString(dto.getQuestionIds());
             StudentRecommendation recommendation = new StudentRecommendation();
-            recommendation.setStudentId((long) BaseContext.getCurrentId());
+            recommendation.setStudentId(studentId);
             recommendation.setRecommendedQuestions(jsonQuestions);
 
-            int count = questionMapper.countRecommendationsByStudentId((long) BaseContext.getCurrentId());
+            int count = questionMapper.countRecommendationsByStudentId(studentId);
             int result;
             if (count > 0) {
                 // 更新现有记录
@@ -207,34 +192,33 @@ public class QuestionServiceImpl implements QuestionService {
                 // 插入新记录
                 result = questionMapper.saveRecommendedQuestions(recommendation);
             }
-            BaseContext.removeCurrentId();
             return result > 0;
         } catch (Exception e) {
             log.error("保存推荐题目失败: {}", e.getMessage());
-            BaseContext.removeCurrentId();
             return false;
         }
     }
 
     public RecommendResponseDTO getRecommendQuestions() {
-        Integer currentId = BaseContext.getCurrentId();
-        if (currentId == null || currentId == 0) {
-            BaseContext.setCurrentId(1);
-        }
+        long studentId = currentUserIdOrThrow();
         try {
-            StudentRecommendation recommendation = questionMapper.getRecommendationByStudentId((long) BaseContext.getCurrentId());
+            StudentRecommendation recommendation = questionMapper.getRecommendationByStudentId(studentId);
             RecommendResponseDTO dto = new RecommendResponseDTO();
             if (recommendation != null && recommendation.getRecommendedQuestions() != null) {
                 dto.setQuestionIds(objectMapper.readValue(recommendation.getRecommendedQuestions(), new TypeReference<List<Long>>(){}));
             } else {
                 dto.setQuestionIds(Collections.emptyList());
             }
-            BaseContext.removeCurrentId();
             return dto;
         } catch (Exception e) {
             log.error("获取推荐题目失败: {}", e.getMessage(), e);
-            BaseContext.removeCurrentId();
             return null;
         }
+    }
+
+    private long currentUserIdOrThrow() {
+        Integer id = BaseContext.getCurrentId();
+        if (id == null || id <= 0) throw new IllegalStateException("未登录");
+        return id.longValue();
     }
 }
