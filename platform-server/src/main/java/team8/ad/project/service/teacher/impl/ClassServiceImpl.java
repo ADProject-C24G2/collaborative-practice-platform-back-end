@@ -1,11 +1,13 @@
 package team8.ad.project.service.teacher.impl;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONException;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
+
 import team8.ad.project.constant.UserConstant;
 import team8.ad.project.context.BaseContext;
 import team8.ad.project.entity.dto.*;
@@ -333,6 +335,34 @@ public class ClassServiceImpl implements ClassService {
         user.setPassword(null);
 
         return Result.success(user);
+    }
+
+    @Override
+    public void uploadQuestion(QuestionDTO questionDTO) {
+        Question questionEntity = new Question();
+        BeanUtils.copyProperties(questionDTO, questionEntity, "image");
+
+        // Base64解码逻辑 (保持不变)
+        String base64Image = questionDTO.getImage();
+        if (base64Image != null && !base64Image.isEmpty()) {
+            try {
+                String pureBase64 = base64Image.substring(base64Image.indexOf(",") + 1);
+                byte[] imageBytes = java.util.Base64.getDecoder().decode(pureBase64);
+                questionEntity.setImage(imageBytes);
+            } catch (Exception e) {
+                log.error("Failed to decode Base64 image string.", e);
+                throw new RuntimeException("Invalid Base64 image format.", e);
+            }
+        }
+
+        // [!code focus:3] 3. 使用Fastjson进行序列化
+        // Fastjson的toJSONString方法不会抛出受检异常，代码更简洁
+        String choicesAsJson = JSON.toJSONString(questionDTO.getOptions());
+        questionEntity.setChoices(choicesAsJson);
+
+        classMapper.insertQuestion(questionEntity);
+        log.info("Successfully inserted question with id: {}", questionEntity.getId());
+
     }
 
 

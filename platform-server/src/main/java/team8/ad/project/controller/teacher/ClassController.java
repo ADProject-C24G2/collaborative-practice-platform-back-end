@@ -200,6 +200,17 @@ public class ClassController {
         return classService.getCurrentUser(session);
     }
 
+    /**
+     * upload question
+     * @param quesionDTO
+     * @return
+     */
+    @PostMapping("/upload-question")
+    @ApiOperation("upload question")
+    public Result uploadQuestion(@RequestBody QuestionDTO quesionDTO) {
+        classService.uploadQuestion(quesionDTO);
+        return Result.success();
+    }
 
 
 }

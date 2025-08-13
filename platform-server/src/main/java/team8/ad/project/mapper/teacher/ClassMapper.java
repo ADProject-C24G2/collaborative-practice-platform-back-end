@@ -143,4 +143,11 @@ public interface ClassMapper {
 
     @Select("SELECT COUNT(*) from assignment where class_id = #{id} AND expire_time >= #{time}")
     int getOngoingAssignment(int id, LocalDateTime time);
+
+    /**
+     * Inserts a new question record into the 'qa' table.
+     * @param question The question entity to be inserted.
+     * @return The number of rows affected.
+     */
+    int insertQuestion(Question question);
 }

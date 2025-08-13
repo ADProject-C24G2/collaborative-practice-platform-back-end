@@ -37,4 +37,6 @@ public interface ClassService {
 
 
     Result<User> getCurrentUser(HttpSession session);
+
+    void uploadQuestion(QuestionDTO questionDTO);
 }

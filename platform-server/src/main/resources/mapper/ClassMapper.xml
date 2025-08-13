@@ -91,4 +91,16 @@
         LIMIT #{count} OFFSET #{offset}
     </select>
 
+
+
+    <insert id="insertQuestion" parameterType="team8.ad.project.entity.entity.Question"
+            useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        INSERT INTO qa
+        (image, question, choices, answer, grade, subject, topic, category,
+         hint, task, skill, lecture, solution)
+        VALUES
+            (#{image}, #{question}, #{choices}, #{answer}, #{grade}, #{subject}, #{topic}, #{category},
+             #{hint}, #{task}, #{skill}, #{lecture}, #{solution})
+    </insert>
+
 </mapper>
