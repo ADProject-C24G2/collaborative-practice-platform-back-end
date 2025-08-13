@@ -8,6 +8,8 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import team8.ad.project.entity.dto.ClassListItemDTO;
+import team8.ad.project.entity.entity.User;
+
 import java.util.List;
 
 @Mapper
@@ -54,4 +56,13 @@ public interface ClassMapper {
     // —— 新增: 当前学生离开班级
     @Delete("DELETE FROM user_class_details WHERE class_id = #{classId} AND student_id = #{studentId}")
     int deleteMember(@Param("classId") Integer classId, @Param("studentId") Long studentId);
+
+    /**
+     * 根据邮箱查询用户
+     * @param email
+     * @return
+     */
+    @Select(" select * from user where email = #{email}")
+    User getByEmail(String email);
+
 }

@@ -30,6 +30,18 @@ public class Result<T> implements Serializable {
         return result;
     }
 
+    public static <T> Result<T> success(Integer code) {
+        Result<T> result = new Result<T>();
+        result.code = 2;
+        return result;
+    }
+
+    public static <T> Result<T> error(Integer code) {
+        Result result = new Result();
+        result.code = 3;
+        return result;
+    }
+
     public static <T> Result<T> error(String msg) {
         Result result = new Result();
         result.msg = msg;

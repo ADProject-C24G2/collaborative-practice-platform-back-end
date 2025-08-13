@@ -5,17 +5,18 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.DigestUtils;
+import team8.ad.project.constant.UserConstant;
 import team8.ad.project.context.BaseContext;
-import team8.ad.project.entity.dto.AnnouncementDTO;
-import team8.ad.project.entity.dto.MakeAssignmentDTO;
-import team8.ad.project.entity.dto.ViewQuestionDTO;
+import team8.ad.project.entity.dto.*;
 import team8.ad.project.entity.entity.*;
 import team8.ad.project.entity.entity.Class;
 import team8.ad.project.entity.vo.*;
-import team8.ad.project.entity.dto.ClassDTO;
 import team8.ad.project.mapper.teacher.ClassMapper;
+import team8.ad.project.result.Result;
 import team8.ad.project.service.teacher.ClassService;
 
+import javax.servlet.http.HttpSession;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
@@ -107,8 +108,9 @@ public class ClassServiceImpl implements ClassService {
 
                 // *** 修改点 3: 使用假数据设置 unreadMessages ***
                 // TODO 这里还有unread的message没有设置
-                vo.setUnreadMessages(random.nextInt(10));
-                log.trace("Assigned random unreadMessages: {} for class ID: {}", vo.getUnreadMessages(), clazz.getId());
+                int ongoingAssignment = classMapper.getOngoingAssignment(clazz.getId(),LocalDateTime.now());
+                vo.setOngoingAssignment(ongoingAssignment);
+                log.trace("Assigned random unreadMessages: {} for class ID: {}", vo.getOngoingAssignment(), clazz.getId());
 
 
                 // TODO 图片没设置
@@ -149,7 +151,7 @@ public class ClassServiceImpl implements ClassService {
      * @param announcementDTO
      */
     @Override
-    public void inserAnnouncement(AnnouncementDTO announcementDTO) {
+    public Result inserAnnouncement(AnnouncementDTO announcementDTO) {
         Announcement myAnnouncement = new Announcement();
         BeanUtils.copyProperties(announcementDTO, myAnnouncement);
         myAnnouncement.setStatus((byte)0);
@@ -165,14 +167,15 @@ public class ClassServiceImpl implements ClassService {
         }
         else{
             List<StudentVO> studentsId = classMapper.getStudents(Integer.parseInt(announcementDTO.getClassId()));
+            if(studentsId.isEmpty()){
+                return Result.error(3);
+            }
             for(StudentVO studentVO : studentsId){
                 myAnnouncement.setStudentId(studentVO.getStudentId());
                 classMapper.insertAnnouncement(myAnnouncement);
             }
         }
-
-
-
+        return Result.success(2);
 
     }
 
@@ -279,6 +282,58 @@ public class ClassServiceImpl implements ClassService {
         return questionVOList;
     }
 
+    @Override
+    public LoginResultVO login(LoginDTO loginDTO, HttpSession session){
+        String email = loginDTO.getEmail();
+        String password = loginDTO.getPassword();
+
+        User user = classMapper.getByEmail(email);
+
+        // 1. 用户不存在
+        if (user == null) {
+            return buildLoginErrorResult();
+        }
+
+        // 2. 密码比对 (生产环境建议使用BCrypt)
+
+        if (!password.equals(user.getPassword())) {
+            return buildLoginErrorResult();
+        }
+
+        // 3. 权限校验，只允许老师登录
+        if (!UserConstant.TEACHER_USER_TYPE.equals(user.getUserType())) {
+            return buildLoginErrorResult();
+        }
+
+        // 4. 登录成功，将用户ID存入Session
+        session.setAttribute(UserConstant.USER_ID_IN_SESSION, user.getId());
+
+        // 5. 构建前端需要的成功返回格式
+        return LoginResultVO.builder()
+                .status("ok")
+                .type(loginDTO.getType())
+                .currentAuthority(user.getUserType())
+                .build();
+
+    }
+
+    @Override
+    public Result<User> getCurrentUser(HttpSession session) {
+        Integer userId = (Integer)session.getAttribute(UserConstant.USER_ID_IN_SESSION);
+        if (userId == null) {
+            return Result.error("用户未登录");
+        }
+
+        User user = classMapper.getById(userId);
+        if (user == null) {
+            return Result.error("用户不存在");
+        }
+
+        // 出于安全考虑，不应该返回密码字段
+        user.setPassword(null);
+
+        return Result.success(user);
+    }
 
 
     public void makeAssignment(MakeAssignmentDTO dto) throws ParseException {
@@ -315,6 +370,18 @@ public class ClassServiceImpl implements ClassService {
 
 
 
+
+    /**
+     * 构建一个符合前端预期的登录失败响应 (已修改)
+     * @return
+     */
+    private LoginResultVO buildLoginErrorResult() {
+        return LoginResultVO.builder()
+                .status("error")
+                .type("account")
+                .currentAuthority("guest") // 失败时权限为 guest
+                .build();
+    }
 
 
     private void setTime(ClassDTO classDTO, Class myClass){

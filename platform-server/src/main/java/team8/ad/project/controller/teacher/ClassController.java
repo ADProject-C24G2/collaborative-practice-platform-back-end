@@ -7,16 +7,16 @@ import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.implementation.bind.annotation.AllArguments;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import team8.ad.project.constant.UserConstant;
 import team8.ad.project.context.BaseContext;
-import team8.ad.project.entity.dto.AnnouncementDTO;
-import team8.ad.project.entity.dto.MakeAssignmentDTO;
-import team8.ad.project.entity.dto.ViewQuestionDTO;
+import team8.ad.project.entity.dto.*;
 import team8.ad.project.entity.entity.Announcement;
+import team8.ad.project.entity.entity.User;
 import team8.ad.project.entity.vo.*;
-import team8.ad.project.entity.dto.ClassDTO;
 import team8.ad.project.result.Result;
 import team8.ad.project.service.teacher.ClassService;
 
+import javax.servlet.http.HttpSession;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,11 +39,10 @@ public class ClassController {
      */
     @PostMapping("/create")
     @ApiOperation("Create Class")
-    public Result createClass(@RequestBody ClassDTO classDTO){
+    public Result createClass(@RequestBody ClassDTO classDTO,HttpSession session){
 
         log.info("Create Class:{}", classDTO);
-        // TODO Here need set the teacherId
-        BaseContext.setCurrentId(1);
+        BaseContext.setCurrentId((Integer)session.getAttribute(UserConstant.USER_ID_IN_SESSION));
 
         String token = classService.createClass(classDTO);
 
@@ -58,10 +57,9 @@ public class ClassController {
      */
     @GetMapping("/currentUserDetail")
     @ApiOperation("Get teacher profile")
-    public Result getTeacherProfile(){
+    public Result getTeacherProfile(HttpSession session){
         log.info("Get teacher profile");
-        // TODO 假设登陆的老师id = 1
-        BaseContext.setCurrentId(1);
+        BaseContext.setCurrentId((Integer)session.getAttribute(UserConstant.USER_ID_IN_SESSION));
         TeacherVO teacherVO = classService.getTeacherProfile();
         return Result.success(teacherVO);
     }
@@ -73,12 +71,12 @@ public class ClassController {
      */
     @GetMapping("/class-list") // 新增的获取班级列表接口
     @ApiOperation("Obtain the list of classes for the teachers")
-    public Result getClassList(@RequestParam(defaultValue = "30") int count) {
+    public Result getClassList(@RequestParam(defaultValue = "30") int count,HttpSession session) {
         log.info("Get class list, requested count: {}", count);
         try {
-            // TODO 模拟id
+
             // 1. 获取当前登录教师的ID (假设已通过认证设置到 BaseContext)
-            BaseContext.setCurrentId(1);
+            BaseContext.setCurrentId((Integer)session.getAttribute(UserConstant.USER_ID_IN_SESSION));
             int currentTeacherId = BaseContext.getCurrentId();
             log.debug("Current teacher ID from context: {}", currentTeacherId);
 
@@ -103,10 +101,9 @@ public class ClassController {
      */
     @GetMapping("/getStudents")
     @ApiOperation("get the specific students of the class")
-    public Result getStudent(@RequestParam(defaultValue = "30") int classId) {
+    public Result getStudent(@RequestParam(defaultValue = "30") int classId,HttpSession session) {
         log.info("start to get students");
-        // TODO 模拟id
-        BaseContext.setCurrentId(1);
+        BaseContext.setCurrentId((Integer)session.getAttribute(UserConstant.USER_ID_IN_SESSION));
         int currentTeacherId = BaseContext.getCurrentId();
         List<StudentVO> studentsVO = classService.getStudents(classId);
         return Result.success(studentsVO);
@@ -115,12 +112,10 @@ public class ClassController {
 
     @PostMapping("/make-announcement")
     @ApiOperation("make announcement")
-    public Result makeAnnouncement(@RequestBody AnnouncementDTO announcementDTO) {
+    public Result makeAnnouncement(@RequestBody AnnouncementDTO announcementDTO,HttpSession session) {
         log.info("start to make announcement");
-        // TODO 模拟id
-        BaseContext.setCurrentId(1);
-        classService.inserAnnouncement(announcementDTO);
-        return Result.success();
+        BaseContext.setCurrentId((Integer)session.getAttribute(UserConstant.USER_ID_IN_SESSION));
+        return classService.inserAnnouncement(announcementDTO);
     }
 
     /**
@@ -130,30 +125,31 @@ public class ClassController {
      */
     @GetMapping("/get-announcement")
     @ApiOperation("view the class details and manage")
-    public Result manageClass(@RequestParam int classId) {
+    public Result manageClass(@RequestParam int classId,HttpSession session) {
         log.info("start to manage class");
-        // TODO 模拟id
-        BaseContext.setCurrentId(1);
+        BaseContext.setCurrentId((Integer)session.getAttribute(UserConstant.USER_ID_IN_SESSION));
         List<AnnouncementVO> announcementVO = classService.getAnnouncement(classId);
         return Result.success(announcementVO);
 
     }
 
 
-    /**
-     * make assignment
-     * @param assignment
-     * @return
-     */
-    @PostMapping("/assign-assignment")
-    @ApiOperation("make assignment")
-    public Result assignAssignment(@RequestBody AllArguments.Assignment assignment) {
-        log.info("start to assign assignment");
-        return Result.success();
-    }
+//    /**
+//     * make assignment
+//     * @param assignment
+//     * @return
+//     */
+//    @PostMapping("/assign-assignment")
+//    @ApiOperation("make assignment")
+//    public Result assignAssignment(@RequestBody AllArguments.Assignment assignment) {
+//        log.info("start to assign assignment");
+//        return Result.success();
+//    }
 
     /**
-     * Get questions
+     * Get the questions
+     * @param viewQuestionDTO
+     * @return
      */
     @PostMapping("/get-questions")
     @ApiOperation("get questions")
@@ -178,6 +174,31 @@ public class ClassController {
         } catch (Exception e) {
             return Result.error("Failed to create assignment: " + e.getMessage());
         }
+    }
+
+    /**
+     * 用户登录
+     * @param loginDTO
+     * @param session
+     * @return
+     */
+    @PostMapping("/login")
+    @ApiOperation("用户登录")
+    public LoginResultVO login(@RequestBody LoginDTO loginDTO, HttpSession session) {
+        return classService.login(loginDTO, session);
+    }
+
+    /**
+     * 获取当前登录用户信息
+     * @param session
+     * @return
+     */
+    @GetMapping("/currentUser")
+    @ApiOperation("获取当前用户信息")
+    public Result<User> getCurrentUser(HttpSession session) {
+        // 注意：前端期望的成功返回格式是 { data: { ...user_info... } }
+        // 我们的 Result.success(user) 已经能生成这种格式了。
+        return classService.getCurrentUser(session);
     }
 
 

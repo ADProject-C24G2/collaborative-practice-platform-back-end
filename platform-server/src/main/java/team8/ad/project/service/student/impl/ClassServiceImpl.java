@@ -6,12 +6,17 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.JsonSerializable.Base;
 
+import team8.ad.project.constant.UserConstant;
 import team8.ad.project.context.BaseContext;
 import team8.ad.project.entity.dto.ClassListItemDTO;
 import team8.ad.project.entity.dto.ListDTO;
+import team8.ad.project.entity.dto.LoginDTO;
+import team8.ad.project.entity.entity.User;
+import team8.ad.project.entity.vo.LoginResultVO;
 import team8.ad.project.mapper.student.ClassMapper;
 import team8.ad.project.service.student.ClassService;
 
+import javax.servlet.http.HttpSession;
 import java.util.Collections;
 
 @Slf4j
@@ -129,4 +134,51 @@ public class ClassServiceImpl implements ClassService {
         team8.ad.project.context.BaseContext.removeCurrentId();
     }
 }
+
+    @Override
+    public LoginResultVO login(LoginDTO loginDTO, HttpSession session) {
+        String email = loginDTO.getEmail();
+        String password = loginDTO.getPassword();
+
+        User user = classMapper.getByEmail(email);
+
+        // 1. 用户不存在
+        if (user == null) {
+            return buildLoginErrorResult();
+        }
+
+        // 2. 密码比对 (生产环境建议使用BCrypt)
+
+        if (!password.equals(user.getPassword())) {
+            return buildLoginErrorResult();
+        }
+
+        // 3. 权限校验，只允许老师登录
+        if (!UserConstant.STUDENT_USER_TYPE.equals(user.getUserType())) {
+            return buildLoginErrorResult();
+        }
+
+        // 4. 登录成功，将用户ID存入Session
+        session.setAttribute(UserConstant.USER_ID_IN_SESSION, user.getId());
+
+        // 5. 构建前端需要的成功返回格式
+        return LoginResultVO.builder()
+                .status("ok")
+                .type(loginDTO.getType())
+                .currentAuthority(user.getUserType())
+                .build();
+
+    }
+
+    /**
+     * 构建一个符合前端预期的登录失败响应 (已修改)
+     * @return
+     */
+    private LoginResultVO buildLoginErrorResult() {
+        return LoginResultVO.builder()
+                .status("error")
+                .type("account")
+                .currentAuthority("guest") // 失败时权限为 guest
+                .build();
+    }
 }

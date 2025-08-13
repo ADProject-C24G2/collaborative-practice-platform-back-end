@@ -1,5 +1,6 @@
 package team8.ad.project.mapper.teacher;
 
+import io.swagger.models.auth.In;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Options;
@@ -13,6 +14,7 @@ import team8.ad.project.entity.vo.ClassVO;
 import team8.ad.project.entity.vo.StudentVO;
 import team8.ad.project.enumeration.OperationType;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Mapper
@@ -119,4 +121,26 @@ public interface ClassMapper {
      */
     @Insert("INSERT INTO assignment_details (assignment_id, question_id) VALUES (#{assignmentId}, #{questionId})")
     int insertAssignmentDetails(AssignmentDetails details);
+
+
+
+
+    /**
+     * 根据邮箱查询用户
+     * @param email
+     * @return
+     */
+    @Select(" select * from user where email = #{email}")
+    User getByEmail(String email);
+
+    /**
+     * 根据ID查询用户
+     * @param id
+     * @return
+     */
+    @Select(" select * from user where id = #{id}")
+    User getById(Integer id);
+
+    @Select("SELECT COUNT(*) from assignment where class_id = #{id} AND expire_time >= #{time}")
+    int getOngoingAssignment(int id, LocalDateTime time);
 }

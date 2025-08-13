@@ -14,22 +14,16 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestBody;
 
-import team8.ad.project.entity.dto.AnnouncementListDTO;
-import team8.ad.project.entity.dto.AnswerRecordDTO;
-import team8.ad.project.entity.dto.AssignmentListRespDTO;
-import team8.ad.project.entity.dto.DashboardDTO;
-import team8.ad.project.entity.dto.QsInform;
-import team8.ad.project.entity.dto.QsResultDTO;
-import team8.ad.project.entity.dto.RecommendResponseDTO;
-import team8.ad.project.entity.dto.RecommendationDTO;
-import team8.ad.project.entity.dto.RecommendationRequestDTO;
-import team8.ad.project.entity.dto.SelectQuestionDTO;
+import team8.ad.project.entity.dto.*;
+import team8.ad.project.entity.vo.LoginResultVO;
 import team8.ad.project.result.Result;
 import team8.ad.project.service.student.QuestionService;
 import team8.ad.project.service.student.impl.QuestionServiceImpl;
 import team8.ad.project.service.student.AnnouncementService;
 import team8.ad.project.service.student.AssignmentService;
 import team8.ad.project.service.student.ClassService;
+
+import javax.servlet.http.HttpSession;
 
 @RestController
 @RequestMapping("/student")
@@ -51,6 +45,10 @@ public class QuestionController {
     @Autowired
     @Qualifier("studentAnnouncementService")
     private AnnouncementService announcementService;
+
+    @Autowired
+    private ClassService classService;
+
 
     @GetMapping("/viewQuestion")
     @ApiOperation("查看题目（支持关键词和题目名称，带分页，可选指定第几题）")
@@ -228,5 +226,20 @@ public class QuestionController {
         log.info("标记公告已读: announcementId={}", announcementId);
         String err = announcementService.checkAnnouncement(announcementId);
         return err == null ? Result.success("已标记为已读") : Result.error(err);
+    }
+
+
+
+
+    /**
+     * 用户登录
+     * @param loginDTO
+     * @param session
+     * @return
+     */
+    @PostMapping("/login")
+    @ApiOperation("学生用户登录")
+    public LoginResultVO login(@RequestBody LoginDTO loginDTO, HttpSession session) {
+        return classService.login(loginDTO, session);
     }
 }

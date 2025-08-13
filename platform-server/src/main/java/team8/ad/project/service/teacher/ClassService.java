@@ -1,11 +1,11 @@
 package team8.ad.project.service.teacher;
 
-import team8.ad.project.entity.dto.AnnouncementDTO;
-import team8.ad.project.entity.dto.MakeAssignmentDTO;
-import team8.ad.project.entity.dto.ViewQuestionDTO;
+import team8.ad.project.entity.dto.*;
+import team8.ad.project.entity.entity.User;
 import team8.ad.project.entity.vo.*;
-import team8.ad.project.entity.dto.ClassDTO;
+import team8.ad.project.result.Result;
 
+import javax.servlet.http.HttpSession;
 import java.text.ParseException;
 import java.util.List;
 
@@ -25,11 +25,16 @@ public interface ClassService {
     List<StudentVO> getStudents(int classId);
 
 
-    void inserAnnouncement(AnnouncementDTO announcementDTO);
+    Result inserAnnouncement(AnnouncementDTO announcementDTO);
 
     List<AnnouncementVO> getAnnouncement(int classId);
 
     List<QuestionVO> getQuestions(ViewQuestionDTO viewQuestionDTO);
 
     void makeAssignment(MakeAssignmentDTO dto) throws ParseException;
+
+    LoginResultVO  login(LoginDTO loginDTO, HttpSession session);
+
+
+    Result<User> getCurrentUser(HttpSession session);
 }
