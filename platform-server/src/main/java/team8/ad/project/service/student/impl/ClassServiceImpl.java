@@ -31,11 +31,7 @@ public class ClassServiceImpl implements ClassService {
     public ListDTO<ClassListItemDTO> viewClass() {
         ListDTO<ClassListItemDTO> dto = new ListDTO<>();
         try {
-            Integer currentId = BaseContext.getCurrentId();
-            if (currentId == null || currentId == 0) {
-                BaseContext.setCurrentId(1); // 设置默认 ID
-            }
-            Long studentId = (long)BaseContext.getCurrentId();
+            long studentId = currentUserIdOrThrow();
             dto.setList(classMapper.viewClassByStudentId(studentId));
         } catch (Exception e) {
             log.error("查询课程失败: {}", e.getMessage(), e);
@@ -82,11 +78,7 @@ public class ClassServiceImpl implements ClassService {
             }
 
             // 当前用户
-            Integer currentId = BaseContext.getCurrentId();
-            if (currentId == null || currentId == 0) {
-                BaseContext.setCurrentId(1); // 设置默认 ID
-            }
-            Long studentId = (long)BaseContext.getCurrentId();
+            Long studentId = currentUserIdOrThrow();
 
             // 重复加入校验
             if (classMapper.existsMember(cls.getId(), studentId) > 0) {
@@ -104,18 +96,13 @@ public class ClassServiceImpl implements ClassService {
             log.error("加入班级失败: accessType={}, key={}, err={}", accessType, key, e.getMessage(), e);
             return "系统异常";
         } finally {
-            team8.ad.project.context.BaseContext.removeCurrentId();
         }
     }
     @Override
     public String leaveClass(Integer classId) {
     try {
         if (classId == null) return "classId不能为空";
-        Integer currentId = BaseContext.getCurrentId();
-        if (currentId == null || currentId == 0) {
-            BaseContext.setCurrentId(1); // 设置默认 ID
-        }
-        Long studentId = (long)BaseContext.getCurrentId();
+        Long studentId = currentUserIdOrThrow();
         // 1) 是否在班级中
         if (classMapper.existsMember(classId, studentId) <= 0) {
             return "你不在该班级";
@@ -131,7 +118,6 @@ public class ClassServiceImpl implements ClassService {
         log.error("离开班级失败: classId={}, err={}", classId, e.getMessage(), e);
         return "系统异常";
     } finally {
-        team8.ad.project.context.BaseContext.removeCurrentId();
     }
 }
 
@@ -180,5 +166,11 @@ public class ClassServiceImpl implements ClassService {
                 .type("account")
                 .currentAuthority("guest") // 失败时权限为 guest
                 .build();
+    }
+
+    private long currentUserIdOrThrow() {
+        Integer id = BaseContext.getCurrentId();
+        if (id == null || id <= 0) throw new IllegalStateException("未登录");
+        return id.longValue();
     }
 }

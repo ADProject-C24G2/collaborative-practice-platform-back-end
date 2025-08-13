@@ -25,17 +25,13 @@ public class AnnouncementServiceImpl implements AnnouncementService {
     public AnnouncementListDTO selectAnnouncement(Integer classId) {
         AnnouncementListDTO dto = new AnnouncementListDTO();
         try {
-            Long currentId = (long)BaseContext.getCurrentId();
-            if (currentId == null || currentId == 0) {
-                BaseContext.setCurrentId(1); // 设置默认 ID
-            }
+            long currentId = currentUserIdOrThrow();
             List<AnnouncementItemDTO> list = announcementMapper.listByClassAndStudent(classId, currentId);
             dto.setList(list == null ? Collections.emptyList() : list);
         } catch (Exception e) {
             log.error("查询公告失败, classId={}, err={}", classId, e.getMessage(), e);
             dto.setList(Collections.emptyList());
         } finally {
-            BaseContext.removeCurrentId();
         }
         return dto;
     }
@@ -53,5 +49,11 @@ public class AnnouncementServiceImpl implements AnnouncementService {
             log.error("标记公告已读失败, id={}, err={}", announcementId, e.getMessage(), e);
             return "标记已读失败";
         }
+    }
+
+    private long currentUserIdOrThrow() {
+        Integer id = BaseContext.getCurrentId();
+        if (id == null || id <= 0) throw new IllegalStateException("未登录");
+        return id.longValue();
     }
 }
