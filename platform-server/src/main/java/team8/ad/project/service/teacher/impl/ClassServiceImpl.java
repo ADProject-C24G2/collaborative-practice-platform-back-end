@@ -23,7 +23,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
-@Service
+@Service("teacherClassService")
 @Slf4j
 public class ClassServiceImpl implements ClassService {
 // TODO 这里的数据是模拟的

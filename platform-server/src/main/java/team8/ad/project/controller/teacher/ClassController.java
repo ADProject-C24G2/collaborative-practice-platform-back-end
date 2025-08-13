@@ -6,6 +6,7 @@ import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.implementation.bind.annotation.AllArguments;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.*;
 import team8.ad.project.constant.UserConstant;
 import team8.ad.project.context.BaseContext;
@@ -28,10 +29,8 @@ import java.util.Map;
 public class ClassController {
 
     @Autowired
+    @Qualifier("teacherClassService")
     private ClassService classService;
-
-
-
     /**
      * Create a new class
      * @param classDTO
