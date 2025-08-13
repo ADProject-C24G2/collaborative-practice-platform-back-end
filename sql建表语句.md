@@ -60,7 +60,18 @@ CREATE TABLE assignment_details (
     assignment_id INT NOT NULL,
     question_id INT NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+```
 
+```sql 学生作业表
+CREATE TABLE assignmentStudentsDetails (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    assignmentId INT NOT NULL,
+    studentId INT NOT NULL,
+    whetherFinish TINYINT(1) DEFAULT 0 COMMENT '0-未完成, 1-已完成',
+    finishTime DATETIME DEFAULT NULL,
+    Accurancy DECIMAL(5,2) DEFAULT NULL COMMENT '准确率, 例如 85.50',
+    UNIQUE KEY uq_assignment_student (assignmentId, studentId)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 
 ```sql 通知表
@@ -74,7 +85,6 @@ CREATE TABLE announcement (
     createTime DATETIME NOT NULL COMMENT '创建时间',
     status TINYINT(1) NOT NULL COMMENT '状态：0=未读，1=已读'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='班级公告表';
-
 ```
 
 ```sql 手动插入部分学生作答信息
