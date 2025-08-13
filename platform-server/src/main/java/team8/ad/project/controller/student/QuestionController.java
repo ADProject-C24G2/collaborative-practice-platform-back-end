@@ -22,6 +22,8 @@ import team8.ad.project.service.student.AnnouncementService;
 import team8.ad.project.service.student.AssignmentService;
 import team8.ad.project.service.student.ClassService;
 
+import java.math.BigDecimal;
+
 import javax.servlet.http.HttpSession;
 
 @RestController
@@ -222,6 +224,23 @@ public class QuestionController {
         log.info("标记公告已读: announcementId={}", announcementId);
         String err = announcementService.checkAnnouncement(announcementId);
         return err == null ? Result.success("已标记为已读") : Result.error(err);
+    }
+
+    @PostMapping("/finishAssignment")
+    @ApiOperation("上报/更新作业完成状态（支持幂等）")
+    public Result<String> finishAssignment(
+            @ApiParam(value = "作业ID", required = true) @RequestParam Integer assignmentId,
+            @ApiParam(value = "是否完成(0未完成,1已完成)", required = true) @RequestParam Integer whether,
+            @ApiParam(value = "准确率(百分制，如85.50)", required = true) @RequestParam BigDecimal accuracy) {
+
+        team8.ad.project.entity.dto.AssignmentProgressDTO dto = new team8.ad.project.entity.dto.AssignmentProgressDTO();
+        dto.setAssignmentId(assignmentId);
+        dto.setWhetherFinish(whether);
+        dto.setAccuracy(accuracy);
+
+        log.info("上报作业完成状态: assignmentId={}, whetherFinish={}, accuracy={}", assignmentId, whether, accuracy);
+        String err = assignmentService.saveOrUpdateAssignmentProgress(dto);
+        return err == null ? Result.success("已保存") : Result.error(err);
     }
 
 

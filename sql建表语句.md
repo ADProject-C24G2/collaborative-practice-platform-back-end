@@ -63,7 +63,7 @@ CREATE TABLE assignment_details (
 ```
 
 ```sql 学生作业表
-CREATE TABLE assignmentStudentsDetails (
+CREATE TABLE assignment_students_details (
     id INT AUTO_INCREMENT PRIMARY KEY,
     assignmentId INT NOT NULL,
     studentId INT NOT NULL,
