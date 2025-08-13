@@ -32,13 +32,13 @@ public class Result<T> implements Serializable {
 
     public static <T> Result<T> success(Integer code) {
         Result<T> result = new Result<T>();
-        result.code = 2;
+        result.code = code;
         return result;
     }
 
     public static <T> Result<T> error(Integer code) {
         Result result = new Result();
-        result.code = 3;
+        result.code = code;
         return result;
     }
 

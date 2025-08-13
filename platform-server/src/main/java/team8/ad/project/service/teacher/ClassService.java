@@ -41,4 +41,6 @@ public interface ClassService {
     void uploadQuestion(QuestionDTO questionDTO);
 
     List<AssignmentStatusVO> getAssignmentStatus(int classId);
+
+    String register(RegisterDTO registerDTO);
 }

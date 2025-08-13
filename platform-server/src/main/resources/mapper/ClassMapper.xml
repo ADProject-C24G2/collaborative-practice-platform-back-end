@@ -129,4 +129,32 @@
             asd.assignmentId = #{assignmentId}
     </select>
 
+
+
+
+    <insert id="insertUser" parameterType="team8.ad.project.entity.entity.User"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO user
+        (name, password, email, phone, address, signature, gender, avatar, title, `group`,
+         user_type, create_time, update_time, status)
+        VALUES
+            (#{name}, #{password}, #{email}, #{phone}, #{address}, #{signature}, #{gender}, #{avatar}, #{title}, #{group},
+             #{userType}, #{createTime}, #{updateTime}, #{status})
+    </insert>
+
+    <insert id="insertTags">
+        INSERT INTO tag
+        (teacher_id, `key`, label)
+        VALUES
+        <foreach collection="tags" item="tag" separator=",">
+            (#{tag.teacherId}, #{tag.key}, #{tag.label})
+        </foreach>
+    </insert>
+
+
+    <select id="findByEmail" resultType="team8.ad.project.entity.entity.User">
+        SELECT id, email FROM user WHERE email = #{email} LIMIT 1
+    </select>
+
+
 </mapper>

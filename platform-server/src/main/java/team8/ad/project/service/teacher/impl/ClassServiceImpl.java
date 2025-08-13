@@ -6,6 +6,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.DigestUtils;
 
 import team8.ad.project.constant.UserConstant;
@@ -409,6 +411,49 @@ public class ClassServiceImpl implements ClassService {
         }
 
         return resultList;
+    }
+
+    /**
+     * Register
+     * @param registerDTO
+     */
+    @Override
+    @Transactional
+    public String register(RegisterDTO registerDTO) {
+        // 检查邮箱是否已存在
+        User existingUser = classMapper.findByEmail(registerDTO.getEmail());
+        if (existingUser != null) {
+            // [!code focus] 2. 如果邮箱重复，返回错误信息字符串
+            return "Registration failed: The email address is already in use.";
+        }
+
+        // 邮箱可用，继续执行注册流程...
+        User user = new User();
+        BeanUtils.copyProperties(registerDTO, user);
+
+        user.setPassword(registerDTO.getPassword());
+
+        user.setAvatar("https://img.freepik.com/premium-vector/female-teacher-cute-woman-stands-with-pointer-book-school-learning-concept-teacher-s-day_335402-428.jpg");
+        user.setUserType("teacher");
+        user.setStatus(1);
+        user.setCreateTime(LocalDateTime.now());
+        user.setUpdateTime(LocalDateTime.now());
+
+        classMapper.insertUser(user);
+        log.info("New teacher registered with ID: {}", user.getId());
+
+        List<String> tagLabels = registerDTO.getTags();
+        if (!CollectionUtils.isEmpty(tagLabels)) {
+            List<Tag> tags = tagLabels.stream()
+                    .map(label -> new Tag(user.getId(), label))
+                    .collect(Collectors.toList());
+
+            classMapper.insertTags(tags);
+            log.info("Inserted {} tags for teacher ID: {}", tags.size(), user.getId());
+        }
+
+        // [!code focus] 3. 如果所有操作都成功，返回 null
+        return null;
     }
 
 

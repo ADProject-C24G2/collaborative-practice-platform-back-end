@@ -162,4 +162,20 @@ public interface ClassMapper {
      * joining with the students table to get names.
      */
     List<SubmissionDetailDTO> findSubmissionDetailsByAssignmentId(@Param("assignmentId") int assignmentId);
+
+    /**
+     * Inserts a new user. The user's generated ID will be set back on the input object.
+     */
+    int insertUser(User user);
+
+    /**
+     * Batch inserts a list of tags.
+     */
+    int insertTags(@Param("tags") List<Tag> tags);
+    /**
+     * 根据邮箱查找用户，用于校验邮箱是否重复。
+     * @param email
+     * @return 如果找到用户，则返回User对象，否则返回null。
+     */
+    User findByEmail(@Param("email") String email); // [!code focus] 新增方法
 }

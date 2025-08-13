@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.implementation.bind.annotation.AllArguments;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import team8.ad.project.constant.UserConstant;
 import team8.ad.project.context.BaseContext;
@@ -222,6 +223,36 @@ public class ClassController {
     public Result assignmentStatus(@RequestParam int classId){
         List<AssignmentStatusVO> assignmentStatusVOS = classService.getAssignmentStatus(classId);
         return Result.success(assignmentStatusVOS);
+    }
+
+    /**
+     * Register
+     * @return
+     */
+    @PostMapping("/register")
+    @ApiOperation("Teacher Register")
+    public Result register(@RequestBody RegisterDTO registerDTO) {
+        log.info("Processing registration for user: {}", registerDTO.getName());
+        try {
+            // [!code focus:start]
+            // 1. 调用service并接收返回值
+            String errorMessage = classService.register(registerDTO);
+
+            // 2. 判断返回值
+            if (StringUtils.hasText(errorMessage)) {
+                // 如果返回了错误信息，说明注册失败
+                log.warn("Registration failed for {}: {}", registerDTO.getEmail(), errorMessage);
+                return Result.error(4);
+            }
+
+            // 如果返回的是null或空字符串，说明注册成功
+            return Result.success(5);
+            // [!code focus:end]
+        } catch (Exception e) {
+            // 这个catch块仍然保留，用于捕获数据库连接失败等未预料到的系统级异常
+            log.error("An unexpected error occurred during registration for user: {}", registerDTO.getName(), e);
+            return Result.error(0);
+        }
     }
 
 
