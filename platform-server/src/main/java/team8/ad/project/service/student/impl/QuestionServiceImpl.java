@@ -23,6 +23,7 @@ import team8.ad.project.context.BaseContext;
 import team8.ad.project.entity.entity.*;
 import team8.ad.project.mapper.question.QuestionMapper;
 import team8.ad.project.mapper.teacher.ClassMapper;
+import team8.ad.project.result.Result;
 import team8.ad.project.service.student.QuestionService;
 
 import java.time.LocalDate;
@@ -135,67 +136,131 @@ public class QuestionServiceImpl implements QuestionService {
         return dto;
     }
 
-    public RecommendationDTO getRecommendData() {
-        long studentId = currentUserIdOrThrow();
+    // public RecommendationDTO getRecommendData(Long studentId) {
+    //     if (studentId == null) {
+    //         studentId = currentUserIdOrThrow();
+    //     }
+
+    //     List<AnswerRecord> records = questionMapper.getRecordsByStudent(studentId);
+    //     RecommendationDTO dto = new RecommendationDTO();
+    //     dto.setRecords(records.stream()
+    //             .map(r -> {
+    //                 RecommendationDTO.AnswerRecordItem item = new RecommendationDTO.AnswerRecordItem();
+    //                 item.setQuestionId(r.getQuestionId());
+    //                 item.setIsCorrect(r.getIsCorrect());
+    //                 return item;
+    //             })
+    //             .collect(Collectors.toList()));
+
+    //     try {
+    //         HttpHeaders headers = new HttpHeaders();
+    //         headers.setContentType(MediaType.APPLICATION_JSON);
+
+    //         // 关键：把 studentId 一起发给 Python
+    //         Map<String, Object> payload = Map.of(
+    //             "studentId", studentId,
+    //             "records", dto.getRecords()
+    //         );
+
+    //         HttpEntity<Map<String, Object>> request = new HttpEntity<>(payload, headers);
+    //         ResponseEntity<String> response = restTemplate.postForEntity(mlRecommendUrl, request, String.class);
+    //         log.info("ML服务响应: {}", response.getBody());
+
+    //         Map<String, List<Long>> resultMap = objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+    //         List<Long> questionIds = resultMap.get("questionId");
+
+    //         if (questionIds != null && !questionIds.isEmpty()) {
+    //             RecommendationRequestDTO saveDTO = new RecommendationRequestDTO();
+    //             saveDTO.setQuestionIds(questionIds);
+    //             saveDTO.setStudentId(studentId);
+    //             saveRecommendedQuestions(saveDTO);
+    //             log.info("推荐题目已保存: {}", questionIds);
+    //         }
+    //     } catch (Exception e) {
+    //         log.error("调用ML推荐服务失败: {}", e.getMessage(), e);
+    //     }
+
+    //     return dto;
+    // }
+    @Override
+    public RecommendationDTO getRecommendData(Long studentId) {
+        // 这里的 studentId 来自控制器，已确保不为 null
         List<AnswerRecord> records = questionMapper.getRecordsByStudent(studentId);
+
         RecommendationDTO dto = new RecommendationDTO();
-        dto.setRecords(records.stream()
-                .map(r -> {
-                    RecommendationDTO.AnswerRecordItem item = new RecommendationDTO.AnswerRecordItem();
-                    item.setQuestionId(r.getQuestionId());
-                    item.setIsCorrect(r.getIsCorrect());
-                    return item;
-                })
-                .collect(Collectors.toList()));
-        
-        //  触发 ML 模型调用
+        dto.setStudentId(studentId);  
+        dto.setRecords(records.stream().map(r -> {
+            RecommendationDTO.AnswerRecordItem item = new RecommendationDTO.AnswerRecordItem();
+            item.setQuestionId(r.getQuestionId());
+            item.setIsCorrect(r.getIsCorrect());
+            return item;
+        }).collect(Collectors.toList()));
+
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
-            HttpEntity<RecommendationDTO> request = new HttpEntity<>(dto, headers);
-            ResponseEntity<String> response = restTemplate.postForEntity(mlRecommendUrl, request, String.class);
-            log.info("ML服务响应: {}", response.getBody());
-            try {
-                Map<String, List<Long>> resultMap = objectMapper.readValue(response.getBody(), new TypeReference<>() {});
-                List<Long> questionIds = resultMap.get("questionId");
 
-                if (questionIds != null && !questionIds.isEmpty()) {
-                    RecommendationRequestDTO saveDTO = new RecommendationRequestDTO();
-                    saveDTO.setQuestionIds(questionIds);
-                    saveRecommendedQuestions(saveDTO);
-                    log.info("推荐题目已保存: {}", questionIds);
-                }
-            } catch (Exception e) {
-                log.error("解析或保存推荐题目失败: {}", e.getMessage(), e);
-            }
+            // 约定：给 ML 的 payload 必含 studentId
+            Map<String, Object> payload = Map.of(
+                "studentId", studentId,
+                "records", dto.getRecords()
+            );
+
+            HttpEntity<Map<String, Object>> request = new HttpEntity<>(payload, headers);
+            ResponseEntity<String> resp = restTemplate.postForEntity(mlRecommendUrl, request, String.class);
+            log.info("ML服务响应: {}", resp.getBody());
+
+            // 如果 ML 直接回了题目（同步），你也可以在这里直接保存：
+            // Map<String, List<Long>> map = objectMapper.readValue(resp.getBody(), new TypeReference<>() {});
+            // List<Long> qids = map.get("questionId");
+            // if (qids != null && !qids.isEmpty()) {
+            //     RecommendationRequestDTO saveDTO = new RecommendationRequestDTO();
+            //     saveDTO.setStudentId(studentId);
+            //     saveDTO.setQuestionIds(qids);
+            //     saveRecommendedQuestions(saveDTO);
+            // }
+
         } catch (Exception e) {
             log.error("调用ML推荐服务失败: {}", e.getMessage(), e);
         }
-
         return dto;
     }
 
+
+    @Override
     public boolean saveRecommendedQuestions(RecommendationRequestDTO dto) {
-        long studentId = currentUserIdOrThrow();
+        // 1) 优先用 body 里的 studentId
+        Long studentId = dto.getStudentId();
+
+        // 2) 没有的话，再尝试 Session（BaseContext）
+        if (studentId == null) {
+            Integer sid = BaseContext.getCurrentId();
+            if (sid != null && sid > 0) {
+                studentId = sid.longValue();
+            }
+        }
+
+        // 3) 还没有 -> 明确抛业务错误（不要去调 currentUserIdOrThrow）
+        if (studentId == null) {
+            log.warn("saveRecommendedQuestions: no studentId in body and no login session");
+            // 你也可以 return false; 看你统一的 Result 约定
+            throw new IllegalStateException("缺少 studentId");
+        }
+
         try {
-            ObjectMapper objectMapper = new ObjectMapper();
             String jsonQuestions = objectMapper.writeValueAsString(dto.getQuestionIds());
             StudentRecommendation recommendation = new StudentRecommendation();
             recommendation.setStudentId(studentId);
             recommendation.setRecommendedQuestions(jsonQuestions);
 
             int count = questionMapper.countRecommendationsByStudentId(studentId);
-            int result;
-            if (count > 0) {
-                // 更新现有记录
-                result = questionMapper.updateRecommendedQuestions(recommendation);
-            } else {
-                // 插入新记录
-                result = questionMapper.saveRecommendedQuestions(recommendation);
-            }
+            int result = (count > 0)
+                    ? questionMapper.updateRecommendedQuestions(recommendation)
+                    : questionMapper.saveRecommendedQuestions(recommendation);
+
             return result > 0;
         } catch (Exception e) {
-            log.error("保存推荐题目失败: {}", e.getMessage());
+            log.error("保存推荐题目失败: {}", e.getMessage(), e);
             return false;
         }
     }

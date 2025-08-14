@@ -59,6 +59,7 @@ public class WebMvcConfiguration extends WebMvcConfigurationSupport {
                 .excludePathPatterns(
                         "/student/login",            // 登录放行
                         "/student/register",         // 注册放行
+                        "/student/recommendQuestion",
                         "/error",
                         // 文档/静态资源放行
                         "/doc.html",
