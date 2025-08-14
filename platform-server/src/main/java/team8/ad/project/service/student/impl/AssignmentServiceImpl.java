@@ -62,11 +62,18 @@ public class AssignmentServiceImpl implements AssignmentService {
                 resp.setClassId(header.classId);
                 resp.setClassName(header.className);
             } else {
-                // 班级不存在也给个兜底
                 resp.setClassId(classId);
                 resp.setClassName("");
             }
-            List<AssignmentItemDTO> list = assignmentMapper.listByClassId(classId);
+
+            // 关键：从 BaseContext 拿当前登录学生 id，传给 mapper
+            Long studentId = null;
+            Integer cur = team8.ad.project.context.BaseContext.getCurrentId();
+            if (cur != null && cur > 0) {
+                studentId = cur.longValue();
+            }
+
+            List<AssignmentItemDTO> list = assignmentMapper.listByClassId(classId, studentId);
             resp.setList(list != null ? list : Collections.emptyList());
         } catch (Exception e) {
             log.error("查询作业失败: classId={}, err={}", classId, e.getMessage(), e);
