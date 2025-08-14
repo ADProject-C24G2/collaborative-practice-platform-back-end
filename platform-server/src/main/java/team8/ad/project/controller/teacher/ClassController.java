@@ -188,6 +188,12 @@ public class ClassController {
         return classService.login(loginDTO, session);
     }
 
+    @PostMapping("/logout")
+    @ApiOperation("用户退出登录")
+    public LoginResultVO logout(HttpSession session) {
+        return classService.logout(session);
+    }
+
     /**
      * 获取当前登录用户信息
      * @param session

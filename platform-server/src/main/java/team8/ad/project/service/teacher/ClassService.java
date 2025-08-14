@@ -35,6 +35,7 @@ public interface ClassService {
 
     LoginResultVO  login(LoginDTO loginDTO, HttpSession session);
 
+    LoginResultVO logout(HttpSession session);
 
     Result<User> getCurrentUser(HttpSession session);
 

@@ -323,6 +323,18 @@ public class ClassServiceImpl implements ClassService {
     }
 
     @Override
+    public LoginResultVO logout(HttpSession session) {
+        if (session != null) {
+            session.invalidate();
+        }
+        return LoginResultVO.builder()
+                .status("ok")
+                .type(null)
+                .currentAuthority(null)
+                .build();
+    }
+
+    @Override
     public Result<User> getCurrentUser(HttpSession session) {
         Integer userId = (Integer)session.getAttribute(UserConstant.USER_ID_IN_SESSION);
         if (userId == null) {
