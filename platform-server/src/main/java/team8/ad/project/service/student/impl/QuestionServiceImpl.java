@@ -1,5 +1,7 @@
 package team8.ad.project.service.student.impl;
 
+import com.alibaba.fastjson.JSON;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -7,6 +9,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.client.RestTemplate;
 
@@ -14,22 +18,15 @@ import lombok.extern.slf4j.Slf4j;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import team8.ad.project.entity.dto.QsResultDTO;
-import team8.ad.project.entity.dto.RecommendResponseDTO;
-import team8.ad.project.entity.dto.RecommendationDTO;
-import team8.ad.project.entity.dto.RecommendationRequestDTO;
-import team8.ad.project.entity.dto.SelectQuestionDTO;
+import team8.ad.project.entity.dto.*;
 import team8.ad.project.context.BaseContext;
-import team8.ad.project.entity.dto.AnswerRecordDTO;
-import team8.ad.project.entity.dto.DashboardDTO;
-import team8.ad.project.entity.dto.QsInform;
-import team8.ad.project.entity.entity.AnswerRecord;
-import team8.ad.project.entity.entity.Question;
-import team8.ad.project.entity.entity.StudentRecommendation;
+import team8.ad.project.entity.entity.*;
 import team8.ad.project.mapper.question.QuestionMapper;
+import team8.ad.project.mapper.teacher.ClassMapper;
 import team8.ad.project.service.student.QuestionService;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -47,6 +44,10 @@ public class QuestionServiceImpl implements QuestionService {
     private RestTemplate restTemplate;
     @Value("${ml.recommend-url}")
     private String mlRecommendUrl;
+
+    //注册用别的不用
+    @Autowired
+    private ClassMapper classMapper;
 
     private static final int PAGE_SIZE = 10; // 每页10个题目
     
@@ -220,5 +221,77 @@ public class QuestionServiceImpl implements QuestionService {
         Integer id = BaseContext.getCurrentId();
         if (id == null || id <= 0) throw new IllegalStateException("未登录");
         return id.longValue();
+    }
+
+
+    /**
+     * Register
+     * @param registerDTO
+     */
+    @Override
+    @Transactional
+    public String register(RegisterDTO registerDTO) {
+        // 检查邮箱是否已存在
+        User existingUser = classMapper.findByEmail(registerDTO.getEmail());
+        if (existingUser != null) {
+            // [!code focus] 2. 如果邮箱重复，返回错误信息字符串
+            return "Registration failed: The email address is already in use.";
+        }
+
+        // 邮箱可用，继续执行注册流程...
+        User user = new User();
+        BeanUtils.copyProperties(registerDTO, user);
+
+        user.setPassword(registerDTO.getPassword());
+
+        user.setAvatar("https://img.freepik.com/premium-vector/female-teacher-cute-woman-stands-with-pointer-book-school-learning-concept-teacher-s-day_335402-428.jpg");
+        user.setUserType("student");
+        user.setStatus(1);
+        user.setCreateTime(LocalDateTime.now());
+        user.setUpdateTime(LocalDateTime.now());
+
+        classMapper.insertUser(user);
+        log.info("New teacher registered with ID: {}", user.getId());
+
+        List<String> tagLabels = registerDTO.getTags();
+        if (!CollectionUtils.isEmpty(tagLabels)) {
+            List<Tag> tags = tagLabels.stream()
+                    .map(label -> new Tag(user.getId(), label))
+                    .collect(Collectors.toList());
+
+            classMapper.insertTags(tags);
+            log.info("Inserted {} tags for teacher ID: {}", tags.size(), user.getId());
+        }
+
+        // [!code focus] 3. 如果所有操作都成功，返回 null
+        return null;
+    }
+
+    @Override
+    public void uploadQuestion(QuestionDTO questionDTO) {
+        Question questionEntity = new Question();
+        BeanUtils.copyProperties(questionDTO, questionEntity, "image");
+
+        // Base64解码逻辑 (保持不变)
+        String base64Image = questionDTO.getImage();
+        if (base64Image != null && !base64Image.isEmpty()) {
+            try {
+                String pureBase64 = base64Image.substring(base64Image.indexOf(",") + 1);
+                byte[] imageBytes = java.util.Base64.getDecoder().decode(pureBase64);
+                questionEntity.setImage(imageBytes);
+            } catch (Exception e) {
+                log.error("Failed to decode Base64 image string.", e);
+                throw new RuntimeException("Invalid Base64 image format.", e);
+            }
+        }
+
+        // [!code focus:3] 3. 使用Fastjson进行序列化
+        // Fastjson的toJSONString方法不会抛出受检异常，代码更简洁
+        String choicesAsJson = JSON.toJSONString(questionDTO.getOptions());
+        questionEntity.setChoices(choicesAsJson);
+
+        classMapper.insertQuestion(questionEntity);
+        log.info("Successfully inserted question with id: {}", questionEntity.getId());
+
     }
 }

@@ -3,6 +3,7 @@ package team8.ad.project.service.student;
 import team8.ad.project.entity.dto.ClassListItemDTO;
 import team8.ad.project.entity.dto.ListDTO;
 import team8.ad.project.entity.dto.LoginDTO;
+import team8.ad.project.entity.dto.RegisterDTO;
 import team8.ad.project.entity.vo.LoginResultVO;
 
 import javax.servlet.http.HttpSession;
@@ -22,4 +23,6 @@ public interface ClassService {
 
 
     LoginResultVO login(LoginDTO loginDTO, HttpSession session);
+
+
 }

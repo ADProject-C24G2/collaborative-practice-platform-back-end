@@ -7,6 +7,7 @@ import org.apache.ibatis.annotations.Options;
 import org.apache.ibatis.annotations.Select;
 import org.springframework.data.repository.query.Param;
 import team8.ad.project.annotation.AutoFill;
+import team8.ad.project.entity.dto.SubmissionDetailDTO;
 import team8.ad.project.entity.dto.ViewQuestionDTO;
 import team8.ad.project.entity.entity.*;
 import team8.ad.project.entity.entity.Class;
@@ -143,4 +144,38 @@ public interface ClassMapper {
 
     @Select("SELECT COUNT(*) from assignment where class_id = #{id} AND expire_time >= #{time}")
     int getOngoingAssignment(int id, LocalDateTime time);
+
+    /**
+     * Inserts a new question record into the 'qa' table.
+     * @param question The question entity to be inserted.
+     * @return The number of rows affected.
+     */
+    int insertQuestion(Question question);
+
+    /**
+     * Finds all assignments for a given class ID.
+     */
+    List<Assignment> findAssignmentsByClassId(@Param("classId") int classId);
+
+    /**
+     * Finds all submission details for a given assignment ID,
+     * joining with the students table to get names.
+     */
+    List<SubmissionDetailDTO> findSubmissionDetailsByAssignmentId(@Param("assignmentId") int assignmentId);
+
+    /**
+     * Inserts a new user. The user's generated ID will be set back on the input object.
+     */
+    int insertUser(User user);
+
+    /**
+     * Batch inserts a list of tags.
+     */
+    int insertTags(@Param("tags") List<Tag> tags);
+    /**
+     * 根据邮箱查找用户，用于校验邮箱是否重复。
+     * @param email
+     * @return 如果找到用户，则返回User对象，否则返回null。
+     */
+    User findByEmail(@Param("email") String email); // [!code focus] 新增方法
 }

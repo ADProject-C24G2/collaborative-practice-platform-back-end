@@ -35,6 +35,13 @@ public interface ClassService {
 
     LoginResultVO  login(LoginDTO loginDTO, HttpSession session);
 
+    LoginResultVO logout(HttpSession session);
 
     Result<User> getCurrentUser(HttpSession session);
+
+    void uploadQuestion(QuestionDTO questionDTO);
+
+    List<AssignmentStatusVO> getAssignmentStatus(int classId);
+
+    String register(RegisterDTO registerDTO);
 }

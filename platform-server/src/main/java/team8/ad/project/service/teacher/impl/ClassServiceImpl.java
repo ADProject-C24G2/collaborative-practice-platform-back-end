@@ -1,11 +1,15 @@
 package team8.ad.project.service.teacher.impl;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONException;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.DigestUtils;
+
 import team8.ad.project.constant.UserConstant;
 import team8.ad.project.context.BaseContext;
 import team8.ad.project.entity.dto.*;
@@ -22,6 +26,7 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service("teacherClassService")
 @Slf4j
@@ -107,7 +112,6 @@ public class ClassServiceImpl implements ClassService {
                 log.trace("Fetched student count: {} for class ID: {}", studentCount, clazz.getId());
 
                 // *** 修改点 3: 使用假数据设置 unreadMessages ***
-                // TODO 这里还有unread的message没有设置
                 int ongoingAssignment = classMapper.getOngoingAssignment(clazz.getId(),LocalDateTime.now());
                 vo.setOngoingAssignment(ongoingAssignment);
                 log.trace("Assigned random unreadMessages: {} for class ID: {}", vo.getOngoingAssignment(), clazz.getId());
@@ -119,8 +123,8 @@ public class ClassServiceImpl implements ClassService {
                 String avatarUrl = "";
                 vo.setAvatar(avatarUrl);
                 log.trace("Assigned avatar: {} for class ID: {}", avatarUrl, clazz.getId());
-
                 // 6. 将转换好的 VO 添加到列表
+                vo.setToken(clazz.getToken());
                 classVOList.add(vo);
             }
 
@@ -318,6 +322,18 @@ public class ClassServiceImpl implements ClassService {
     }
 
     @Override
+    public LoginResultVO logout(HttpSession session) {
+        if (session != null) {
+            session.invalidate();
+        }
+        return LoginResultVO.builder()
+                .status("ok")
+                .type(null)
+                .currentAuthority(null)
+                .build();
+    }
+
+    @Override
     public Result<User> getCurrentUser(HttpSession session) {
         Integer userId = (Integer)session.getAttribute(UserConstant.USER_ID_IN_SESSION);
         if (userId == null) {
@@ -333,6 +349,127 @@ public class ClassServiceImpl implements ClassService {
         user.setPassword(null);
 
         return Result.success(user);
+    }
+
+    /**
+     * upload question
+     * @param questionDTO
+     */
+
+    @Override
+    public void uploadQuestion(QuestionDTO questionDTO) {
+        Question questionEntity = new Question();
+        BeanUtils.copyProperties(questionDTO, questionEntity, "image");
+
+        // Base64解码逻辑 (保持不变)
+        String base64Image = questionDTO.getImage();
+        if (base64Image != null && !base64Image.isEmpty()) {
+            try {
+                String pureBase64 = base64Image.substring(base64Image.indexOf(",") + 1);
+                byte[] imageBytes = java.util.Base64.getDecoder().decode(pureBase64);
+                questionEntity.setImage(imageBytes);
+            } catch (Exception e) {
+                log.error("Failed to decode Base64 image string.", e);
+                throw new RuntimeException("Invalid Base64 image format.", e);
+            }
+        }
+
+        // [!code focus:3] 3. 使用Fastjson进行序列化
+        // Fastjson的toJSONString方法不会抛出受检异常，代码更简洁
+        String choicesAsJson = JSON.toJSONString(questionDTO.getOptions());
+        questionEntity.setChoices(choicesAsJson);
+
+        classMapper.insertQuestion(questionEntity);
+        log.info("Successfully inserted question with id: {}", questionEntity.getId());
+
+    }
+
+
+    /**
+     * Get student assignment status
+     * @param classId
+     * @return
+     */
+    @Override
+    public List<AssignmentStatusVO> getAssignmentStatus(int classId) {
+        // Step 1: Get all assignments for the given class.
+        List<Assignment> assignments = classMapper.findAssignmentsByClassId(classId);
+
+        // This will be our final result list.
+        List<AssignmentStatusVO> resultList = new ArrayList<>();
+
+        // Step 2: For each assignment, get its submission details.
+        for (Assignment assignment : assignments) {
+            // Create the top-level assignment VO.
+            AssignmentStatusVO assignmentStatusVO = new AssignmentStatusVO();
+            assignmentStatusVO.setAssignmentName(assignment.getAssignmentName());
+
+            // Get all submission details for the current assignment's ID.
+            List<SubmissionDetailDTO> submissionDetails = classMapper.findSubmissionDetailsByAssignmentId(assignment.getId());
+
+            // Step 3: Map the flat list of DTOs to a list of SubmissionVOs.
+            List<SubmissionVO> submissionVOs = submissionDetails.stream().map(dto -> {
+                SubmissionVO submissionVO = new SubmissionVO();
+                submissionVO.setKey(String.valueOf(dto.getStudentId())); // Use student ID as the key
+                submissionVO.setStudentId(String.valueOf(dto.getStudentId()));
+                submissionVO.setStudentName(dto.getStudentName());
+                submissionVO.setWhetherFinish(dto.getWhetherFinish());
+                submissionVO.setAccuracy(dto.getAccuracy());
+                submissionVO.setFinishTime(dto.getFinishTime()); // Ensure this is formatted as a String if needed
+                return submissionVO;
+            }).collect(Collectors.toList());
+
+            // Set the list of submissions into our assignment VO.
+            assignmentStatusVO.setSubmissions(submissionVOs);
+
+            // Add the fully constructed assignment VO to our result list.
+            resultList.add(assignmentStatusVO);
+        }
+
+        return resultList;
+    }
+
+    /**
+     * Register
+     * @param registerDTO
+     */
+    @Override
+    @Transactional
+    public String register(RegisterDTO registerDTO) {
+        // 检查邮箱是否已存在
+        User existingUser = classMapper.findByEmail(registerDTO.getEmail());
+        if (existingUser != null) {
+            // [!code focus] 2. 如果邮箱重复，返回错误信息字符串
+            return "Registration failed: The email address is already in use.";
+        }
+
+        // 邮箱可用，继续执行注册流程...
+        User user = new User();
+        BeanUtils.copyProperties(registerDTO, user);
+
+        user.setPassword(registerDTO.getPassword());
+
+        user.setAvatar("https://img.freepik.com/premium-vector/female-teacher-cute-woman-stands-with-pointer-book-school-learning-concept-teacher-s-day_335402-428.jpg");
+        user.setUserType("teacher");
+        user.setStatus(1);
+        user.setCreateTime(LocalDateTime.now());
+        user.setUpdateTime(LocalDateTime.now());
+
+        classMapper.insertUser(user);
+        log.info("New teacher registered with ID: {}", user.getId());
+
+        List<String> tagLabels = registerDTO.getTags();
+        if (!CollectionUtils.isEmpty(tagLabels)) {
+            List<Tag> tags = tagLabels.stream()
+                    .map(label -> new Tag(user.getId(), label))
+                    .collect(Collectors.toList());
+
+            classMapper.insertTags(tags);
+            log.info("Inserted {} tags for teacher ID: {}", tags.size(), user.getId());
+        }
+
+        // [!code focus] 3. 如果所有操作都成功，返回 null
+        return null;
     }
 
 
@@ -351,14 +488,14 @@ public class ClassServiceImpl implements ClassService {
 
         // Insert assignment and get generated ID
         classMapper.insertAssignment(assignment);
-        Long assignmentId = assignment.getId();
+        Integer assignmentId = assignment.getId();
 
         // Insert assignment details for each question ID
         List<String> questionIds = dto.getQuestionIds();
         for (String questionIdStr : questionIds) {
             AssignmentDetails details = new AssignmentDetails();
             details.setAssignmentId(assignmentId);
-            details.setQuestionId(Long.parseLong(questionIdStr));
+            details.setQuestionId(Integer.parseInt(questionIdStr));
             classMapper.insertAssignmentDetails(details);
         }
     }
