@@ -139,6 +139,7 @@ public class QuestionServiceImpl implements QuestionService {
         long studentId = currentUserIdOrThrow();
         List<AnswerRecord> records = questionMapper.getRecordsByStudent(studentId);
         RecommendationDTO dto = new RecommendationDTO();
+        dto.setStudentId(studentId);
         dto.setRecords(records.stream()
                 .map(r -> {
                     RecommendationDTO.AnswerRecordItem item = new RecommendationDTO.AnswerRecordItem();
@@ -176,7 +177,7 @@ public class QuestionServiceImpl implements QuestionService {
     }
 
     public boolean saveRecommendedQuestions(RecommendationRequestDTO dto) {
-        long studentId = currentUserIdOrThrow();
+        long studentId = dto.getStudentId();
         try {
             ObjectMapper objectMapper = new ObjectMapper();
             String jsonQuestions = objectMapper.writeValueAsString(dto.getQuestionIds());
