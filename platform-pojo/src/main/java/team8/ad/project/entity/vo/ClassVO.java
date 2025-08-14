@@ -9,7 +9,8 @@ import lombok.Data;
  */
 @Data
 public class ClassVO {
-    private String id; // 前端期望 String 类型
+    private String id;
+    private String token;// 前端期望 String 类型
     private String className;
     private Integer studentAmount; // 前端期望 Integer 类型
     private Integer ongoingAssignment; // 前端期望 Integer 类型

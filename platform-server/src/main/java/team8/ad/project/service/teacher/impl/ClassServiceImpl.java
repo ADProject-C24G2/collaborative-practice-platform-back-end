@@ -112,7 +112,6 @@ public class ClassServiceImpl implements ClassService {
                 log.trace("Fetched student count: {} for class ID: {}", studentCount, clazz.getId());
 
                 // *** 修改点 3: 使用假数据设置 unreadMessages ***
-                // TODO 这里还有unread的message没有设置
                 int ongoingAssignment = classMapper.getOngoingAssignment(clazz.getId(),LocalDateTime.now());
                 vo.setOngoingAssignment(ongoingAssignment);
                 log.trace("Assigned random unreadMessages: {} for class ID: {}", vo.getOngoingAssignment(), clazz.getId());
@@ -124,8 +123,8 @@ public class ClassServiceImpl implements ClassService {
                 String avatarUrl = "";
                 vo.setAvatar(avatarUrl);
                 log.trace("Assigned avatar: {} for class ID: {}", avatarUrl, clazz.getId());
-
                 // 6. 将转换好的 VO 添加到列表
+                vo.setToken(clazz.getToken());
                 classVOList.add(vo);
             }
 
