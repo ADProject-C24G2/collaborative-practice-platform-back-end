@@ -169,8 +169,7 @@ public class ClassController {
     @ApiOperation("make-assignment form")
     public Result makeAssignment(@RequestBody MakeAssignmentDTO dto) {
         try {
-            classService.makeAssignment(dto);
-            return Result.success();
+            return  classService.makeAssignment(dto);
         } catch (Exception e) {
             return Result.error("Failed to create assignment: " + e.getMessage());
         }
@@ -261,7 +260,17 @@ public class ClassController {
         }
     }
 
-
-
+    /**
+     * Delete an assignment and all its related data.
+     * @param assignmentId The ID of the assignment to be deleted.
+     * @return A Result object indicating success or failure.
+     */
+    // Note: @DeleteMapping("/delete") would be more RESTful, but using @PostMapping as requested.
+    @PostMapping("/delete-assignment")
+    @ApiOperation("Delete Assignment")
+    public Result deleteAssignment(@RequestBody DeleteAssignmentDTO deleteAssignmentDTO) {
+        // The service layer now returns a Result object directly.
+        return classService.deleteAssignment(deleteAssignmentDTO.getAssignmentId());
+    }
 
 }
