@@ -48,6 +48,22 @@ public class QuestionController {
     @Qualifier("studentAnnouncementService")
     private AnnouncementService announcementService;
 
+    @Autowired
+    @Qualifier("studentProfileService")
+    private team8.ad.project.service.student.StudentProfileService studentProfileService;
+
+
+    @GetMapping("/getStudentName")
+    @ApiOperation("获取当前登录学生的姓名")
+    public Result<team8.ad.project.entity.dto.StudentNameDTO> getStudentName() {
+        try {
+            var dto = studentProfileService.getCurrentStudentName();
+            return Result.success(dto);
+        } catch (Exception e) {
+            log.error("获取学生姓名失败: {}", e.getMessage(), e);
+            return Result.error("获取学生姓名失败");
+        }
+    }
 
     @GetMapping("/viewQuestion")
     @ApiOperation("查看题目（支持关键词和题目名称，带分页，可选指定第几题）")
