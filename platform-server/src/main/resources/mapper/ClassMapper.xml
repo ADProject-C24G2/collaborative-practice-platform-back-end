@@ -169,4 +169,38 @@
         DELETE FROM assignment_students_details WHERE assignmentId = #{assignmentId}
     </delete>
 
+    <select id="findStudentsByClassId" resultType="team8.ad.project.entity.vo.StudentInformationVO">
+        SELECT
+            u.id,
+            u.name,
+            u.email,
+            u.phone,
+            u.address,
+            u.status
+        FROM
+            user u
+                JOIN
+            user_class_details ucd ON u.id = ucd.student_id
+        WHERE
+            ucd.class_id = #{classId}
+    </select>
+
+    <delete id="deleteStudentFromClassDetails">
+        DELETE FROM user_class_details
+        WHERE student_id = #{studentId} AND class_id = #{classId}
+    </delete>
+
+    <delete id="deleteStudentAnnouncementsInClass">
+        DELETE FROM announcement
+        WHERE studentId = #{studentId} AND classId = #{classId}
+    </delete>
+
+    <delete id="deleteStudentSubmissionsInClass">
+        DELETE FROM assignment_students_details
+        WHERE
+            studentId = #{studentId}
+          AND
+            assignmentId IN (SELECT id FROM assignment WHERE class_id = #{classId})
+    </delete>
+
 </mapper>

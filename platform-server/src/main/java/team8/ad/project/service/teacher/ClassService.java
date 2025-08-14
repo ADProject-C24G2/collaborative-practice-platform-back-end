@@ -46,4 +46,8 @@ public interface ClassService {
     String register(RegisterDTO registerDTO);
 
     Result deleteAssignment(int assignmentId);
+
+    List<StudentInformationVO> getStudentInformation(int classId);
+
+    Result deleteStudentFromClass(StudentDTO studentDTO);
 }

@@ -12,6 +12,7 @@ import team8.ad.project.entity.dto.ViewQuestionDTO;
 import team8.ad.project.entity.entity.*;
 import team8.ad.project.entity.entity.Class;
 import team8.ad.project.entity.vo.ClassVO;
+import team8.ad.project.entity.vo.StudentInformationVO;
 import team8.ad.project.entity.vo.StudentVO;
 import team8.ad.project.enumeration.OperationType;
 
@@ -210,4 +211,24 @@ public interface ClassMapper {
      * @return The number of rows affected.
      */
     int deleteStudentDetailsByAssignmentId(@Param("assignmentId") int assignmentId);
+
+    List<StudentInformationVO> findStudentsByClassId(int classId);
+
+    /**
+     * Deletes the link between a student and a class in the user_class_details table.
+     * @return The number of rows affected.
+     */
+    int deleteStudentFromClassDetails(@Param("studentId") int studentId, @Param("classId") int classId);
+
+    /**
+     * Deletes all submissions for a student for all assignments within a specific class.
+     * @return The number of rows affected.
+     */
+    int deleteStudentSubmissionsInClass(@Param("studentId") int studentId, @Param("classId") int classId);
+
+    /**
+     * Deletes all announcements for a student within a specific class.
+     * @return The number of rows affected.
+     */
+    int deleteStudentAnnouncementsInClass(@Param("studentId") int studentId, @Param("classId") int classId);
 }

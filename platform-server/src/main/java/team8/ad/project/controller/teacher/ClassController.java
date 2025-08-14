@@ -262,7 +262,7 @@ public class ClassController {
 
     /**
      * Delete an assignment and all its related data.
-     * @param assignmentId The ID of the assignment to be deleted.
+     * @param deleteAssignmentDTO The ID of the assignment to be deleted.
      * @return A Result object indicating success or failure.
      */
     // Note: @DeleteMapping("/delete") would be more RESTful, but using @PostMapping as requested.
@@ -273,4 +273,28 @@ public class ClassController {
         return classService.deleteAssignment(deleteAssignmentDTO.getAssignmentId());
     }
 
+    /**
+     * Get student form class
+     * @param classId
+     * @return
+     */
+    @GetMapping("/get-students-information")
+    @ApiOperation("Get Students Information by Class ID")
+    public Result getStudentsInformation(@RequestParam int classId) {
+        log.info("Fetching student information for classId: {}", classId);
+        List<StudentInformationVO> studentInformationVOS = classService.getStudentInformation(classId);
+        return Result.success(studentInformationVOS);
+    }
+
+    /**
+     * Delete a student's association from a class.
+     * @param studentDTO DTO containing studentId and classId.
+     * @return A Result object indicating success or failure.
+     */
+    @PostMapping("/delete-student")
+    @ApiOperation("Delete student from class")
+    public Result deleteStudent(@RequestBody StudentDTO studentDTO) {
+        // The service layer now returns the Result object directly.
+        return classService.deleteStudentFromClass(studentDTO);
+    }
 }
