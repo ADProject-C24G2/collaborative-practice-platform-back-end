@@ -8,6 +8,6 @@ public class AssignmentItemDTO {
     private Integer assignmentId;
     private String  assignmentName;
     private LocalDateTime expireTime;
-    private Integer whetherFinish;   // 0/1
-    private LocalDateTime finishTime;
+    private Integer whetherFinish;   // assignment_students_details中的
+    private LocalDateTime finishTime; // assignment_students_details中的
 }
