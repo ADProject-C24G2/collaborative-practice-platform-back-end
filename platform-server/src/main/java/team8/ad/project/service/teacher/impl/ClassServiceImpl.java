@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 @Service("teacherClassService")
 @Slf4j
 public class ClassServiceImpl implements ClassService {
-// TODO 这里的数据是模拟的
+    // TODO 这里的数据是模拟的
     private final Random random = new Random();
 
 
@@ -39,7 +39,8 @@ public class ClassServiceImpl implements ClassService {
     ClassMapper classMapper;
 
     /**
-     *Create a new Class
+     * Create a new Class
+     *
      * @param classDTO
      */
     @Override
@@ -48,13 +49,13 @@ public class ClassServiceImpl implements ClassService {
         Class myClass = new Class();
         BeanUtils.copyProperties(classDTO, myClass);
 
-        if(classDTO.getAccessType().equals("byLink") ){
+        if (classDTO.getAccessType().equals("byLink")) {
             token = UUID.randomUUID().toString();
             myClass.setToken(token);
         }
-            setTime(classDTO,myClass);
-            myClass.setTeacherId(BaseContext.getCurrentId());
-            classMapper.insert(myClass);
+        setTime(classDTO, myClass);
+        myClass.setTeacherId(BaseContext.getCurrentId());
+        classMapper.insert(myClass);
         return token;
 
     }
@@ -65,7 +66,7 @@ public class ClassServiceImpl implements ClassService {
      * @return TeacherVO
      */
     @Override
-    public TeacherVO getTeacherProfile(){
+    public TeacherVO getTeacherProfile() {
         int currentUserId = BaseContext.getCurrentId();
         User user = classMapper.getTeacherProfile(currentUserId);
         if (user == null) {
@@ -74,7 +75,7 @@ public class ClassServiceImpl implements ClassService {
             return null; // 或者抛出异常
         }
         TeacherVO teacherVO = new TeacherVO();
-        BeanUtils.copyProperties(user,teacherVO);
+        BeanUtils.copyProperties(user, teacherVO);
         teacherVO.setUserid(String.valueOf(user.getId()));
 
         List<Tag> tags = classMapper.getTagsByTeacherId(currentUserId);
@@ -83,7 +84,6 @@ public class ClassServiceImpl implements ClassService {
         log.info("Successfully fetched profile for teacher: {}", teacherVO.getName());
         return teacherVO;
     }
-
 
 
     @Override
@@ -112,7 +112,7 @@ public class ClassServiceImpl implements ClassService {
                 log.trace("Fetched student count: {} for class ID: {}", studentCount, clazz.getId());
 
                 // *** 修改点 3: 使用假数据设置 unreadMessages ***
-                int ongoingAssignment = classMapper.getOngoingAssignment(clazz.getId(),LocalDateTime.now());
+                int ongoingAssignment = classMapper.getOngoingAssignment(clazz.getId(), LocalDateTime.now());
                 vo.setOngoingAssignment(ongoingAssignment);
                 log.trace("Assigned random unreadMessages: {} for class ID: {}", vo.getOngoingAssignment(), clazz.getId());
 
@@ -140,6 +140,7 @@ public class ClassServiceImpl implements ClassService {
 
     /**
      * get students in specific class
+     *
      * @param classId
      * @return
      */
@@ -152,29 +153,29 @@ public class ClassServiceImpl implements ClassService {
 
     /**
      * Create AnnouncementDTO
+     *
      * @param announcementDTO
      */
     @Override
     public Result inserAnnouncement(AnnouncementDTO announcementDTO) {
         Announcement myAnnouncement = new Announcement();
         BeanUtils.copyProperties(announcementDTO, myAnnouncement);
-        myAnnouncement.setStatus((byte)0);
+        myAnnouncement.setStatus((byte) 0);
         myAnnouncement.setTeacherId(BaseContext.getCurrentId());
         myAnnouncement.setClassId(Integer.parseInt(announcementDTO.getClassId()));
         myAnnouncement.setCreateTime(LocalDateTime.now());
-        if(announcementDTO.getRecipientType().equals("specific")){
-            for(int i : announcementDTO.getSpecificRecipients()){
+        if (announcementDTO.getRecipientType().equals("specific")) {
+            for (int i : announcementDTO.getSpecificRecipients()) {
                 myAnnouncement.setStudentId(i);
                 classMapper.insertAnnouncement(myAnnouncement);
                 log.info("successfully inserted announcement: {}", myAnnouncement);
             }
-        }
-        else{
+        } else {
             List<StudentVO> studentsId = classMapper.getStudents(Integer.parseInt(announcementDTO.getClassId()));
-            if(studentsId.isEmpty()){
+            if (studentsId.isEmpty()) {
                 return Result.error(3);
             }
-            for(StudentVO studentVO : studentsId){
+            for (StudentVO studentVO : studentsId) {
                 myAnnouncement.setStudentId(studentVO.getStudentId());
                 classMapper.insertAnnouncement(myAnnouncement);
             }
@@ -186,6 +187,7 @@ public class ClassServiceImpl implements ClassService {
 
     /**
      * get Anncouncement
+     *
      * @param classId
      * @return
      */
@@ -248,13 +250,14 @@ public class ClassServiceImpl implements ClassService {
 
     /**
      * Get Questions
+     *
      * @param viewQuestionDTO
      * @return
      */
     @Override
     public List<QuestionVO> getQuestions(ViewQuestionDTO viewQuestionDTO) {
         int offset = (viewQuestionDTO.getPage() - 1) * viewQuestionDTO.getCount();
-        List<Question> questions = classMapper.selectQuestions(viewQuestionDTO,offset,viewQuestionDTO.getCount());
+        List<Question> questions = classMapper.selectQuestions(viewQuestionDTO, offset, viewQuestionDTO.getCount());
 
         if (questions.isEmpty()) {
             return Collections.emptyList();
@@ -287,7 +290,7 @@ public class ClassServiceImpl implements ClassService {
     }
 
     @Override
-    public LoginResultVO login(LoginDTO loginDTO, HttpSession session){
+    public LoginResultVO login(LoginDTO loginDTO, HttpSession session) {
         String email = loginDTO.getEmail();
         String password = loginDTO.getPassword();
 
@@ -335,7 +338,7 @@ public class ClassServiceImpl implements ClassService {
 
     @Override
     public Result<User> getCurrentUser(HttpSession session) {
-        Integer userId = (Integer)session.getAttribute(UserConstant.USER_ID_IN_SESSION);
+        Integer userId = (Integer) session.getAttribute(UserConstant.USER_ID_IN_SESSION);
         if (userId == null) {
             return Result.error("用户未登录");
         }
@@ -353,11 +356,13 @@ public class ClassServiceImpl implements ClassService {
 
     /**
      * upload question
+     *
      * @param questionDTO
      */
 
     @Override
     public void uploadQuestion(QuestionDTO questionDTO) {
+
         Question questionEntity = new Question();
         BeanUtils.copyProperties(questionDTO, questionEntity, "image");
 
@@ -378,7 +383,7 @@ public class ClassServiceImpl implements ClassService {
         // Fastjson的toJSONString方法不会抛出受检异常，代码更简洁
         String choicesAsJson = JSON.toJSONString(questionDTO.getOptions());
         questionEntity.setChoices(choicesAsJson);
-
+        questionEntity.setAnswer(Integer.parseInt(questionDTO.getAnswer()));
         classMapper.insertQuestion(questionEntity);
         log.info("Successfully inserted question with id: {}", questionEntity.getId());
 
@@ -387,6 +392,7 @@ public class ClassServiceImpl implements ClassService {
 
     /**
      * Get student assignment status
+     *
      * @param classId
      * @return
      */
@@ -403,7 +409,7 @@ public class ClassServiceImpl implements ClassService {
             // Create the top-level assignment VO.
             AssignmentStatusVO assignmentStatusVO = new AssignmentStatusVO();
             assignmentStatusVO.setAssignmentName(assignment.getAssignmentName());
-
+            assignmentStatusVO.setAssignmentId(assignment.getId());
             // Get all submission details for the current assignment's ID.
             List<SubmissionDetailDTO> submissionDetails = classMapper.findSubmissionDetailsByAssignmentId(assignment.getId());
 
@@ -431,6 +437,7 @@ public class ClassServiceImpl implements ClassService {
 
     /**
      * Register
+     *
      * @param registerDTO
      */
     @Override
@@ -472,8 +479,47 @@ public class ClassServiceImpl implements ClassService {
         return null;
     }
 
+    @Override
+    @Transactional // Ensures all delete operations are part of a single transaction.
+    public Result deleteAssignment(int assignmentId) {
+        try {
+            log.info("Starting deletion process for assignment ID: {}", assignmentId);
 
-    public void makeAssignment(MakeAssignmentDTO dto) throws ParseException {
+            // Step 1: Delete from child table `assignment_students_details`.
+            int studentDetailsDeleted = classMapper.deleteStudentDetailsByAssignmentId(assignmentId);
+            log.info("Deleted {} records from assignment_students_details.", studentDetailsDeleted);
+
+            // Step 2: Delete from child table `assignment_details`.
+            int assignmentDetailsDeleted = classMapper.deleteAssignmentDetailsByAssignmentId(assignmentId);
+            log.info("Deleted {} records from assignment_details.", assignmentDetailsDeleted);
+
+            // Step 3: Delete from the parent `assignment` table.
+            int assignmentDeleted = classMapper.deleteAssignmentById(assignmentId);
+
+            if (assignmentDeleted == 0) {
+                // This case handles when the assignmentId doesn't exist.
+                // The transaction will roll back the previous deletes.
+                log.warn("Assignment with ID {} not found. No records were deleted.", assignmentId);
+                return Result.error("Assignment not found with ID: " + assignmentId);
+            }
+
+            log.info("Successfully deleted assignment with ID: {}", assignmentId);
+            return Result.success("Assignment and all related data deleted successfully.");
+
+        } catch (Exception e) {
+            log.error("Error during deletion of assignment ID: {}", assignmentId, e);
+            // Due to @Transactional, any partial deletions will be rolled back automatically.
+            throw new RuntimeException("An unexpected error occurred during assignment deletion.", e);
+        }
+    }
+
+
+    public Result makeAssignment(MakeAssignmentDTO dto) throws ParseException {
+
+        List<StudentVO> studentsId = classMapper.getStudents(Integer.parseInt(dto.getClassId()));
+        if (studentsId.isEmpty()) {
+            return Result.error(3);
+        }
         Assignment assignment = new Assignment();
         assignment.setClassId(Long.parseLong(dto.getClassId()));
         assignment.setAssignmentName(dto.getTitle());
@@ -498,8 +544,13 @@ public class ClassServiceImpl implements ClassService {
             details.setQuestionId(Integer.parseInt(questionIdStr));
             classMapper.insertAssignmentDetails(details);
         }
-    }
 
+        classMapper.intertAssignmentStudentDetails(assignment.getId(),Integer.parseInt(dto.getClassId()));
+
+
+        return Result.success(6);
+
+    }
 
 
 

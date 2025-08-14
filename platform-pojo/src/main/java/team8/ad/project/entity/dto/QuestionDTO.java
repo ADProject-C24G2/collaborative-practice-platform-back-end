@@ -7,6 +7,7 @@ import java.util.List;
 @Data
 public class QuestionDTO {
 
+
     private String image;
 
     private String question;

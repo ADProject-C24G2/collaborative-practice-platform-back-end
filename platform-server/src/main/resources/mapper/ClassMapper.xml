@@ -157,4 +157,16 @@
     </select>
 
 
+    <delete id="deleteAssignmentById">
+        DELETE FROM assignment WHERE id = #{assignmentId}
+    </delete>
+
+    <delete id="deleteAssignmentDetailsByAssignmentId">
+        DELETE FROM assignment_details WHERE assignment_id = #{assignmentId}
+    </delete>
+
+    <delete id="deleteStudentDetailsByAssignmentId">
+        DELETE FROM assignment_students_details WHERE assignmentId = #{assignmentId}
+    </delete>
+
 </mapper>

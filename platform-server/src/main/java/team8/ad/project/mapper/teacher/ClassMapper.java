@@ -178,4 +178,36 @@ public interface ClassMapper {
      * @return 如果找到用户，则返回User对象，否则返回null。
      */
     User findByEmail(@Param("email") String email); // [!code focus] 新增方法
+
+
+    @Insert("INSERT INTO assignment_students_details " +
+            "(assignmentId, studentId, whetherFinish, finishTime, Accurancy) " +
+            "SELECT #{id}, student_id, 0, NULL, NULL " +
+            "FROM user_class_details " +
+            "WHERE class_id = #{classId}")
+    void intertAssignmentStudentDetails(Integer id, Integer classId);
+
+
+    // ... other methods like insertUser, findByEmail, etc.
+
+    /**
+     * Deletes an assignment by its ID.
+     * @param assignmentId The ID of the assignment to delete.
+     * @return The number of rows affected.
+     */
+    int deleteAssignmentById(@Param("assignmentId") int assignmentId);
+
+    /**
+     * Deletes all question mappings for a given assignment.
+     * @param assignmentId The ID of the assignment.
+     * @return The number of rows affected.
+     */
+    int deleteAssignmentDetailsByAssignmentId(@Param("assignmentId") int assignmentId);
+
+    /**
+     * Deletes all student submission records for a given assignment.
+     * @param assignmentId The ID of the assignment.
+     * @return The number of rows affected.
+     */
+    int deleteStudentDetailsByAssignmentId(@Param("assignmentId") int assignmentId);
 }

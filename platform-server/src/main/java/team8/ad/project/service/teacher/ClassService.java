@@ -31,7 +31,7 @@ public interface ClassService {
 
     List<QuestionVO> getQuestions(ViewQuestionDTO viewQuestionDTO);
 
-    void makeAssignment(MakeAssignmentDTO dto) throws ParseException;
+    Result makeAssignment(MakeAssignmentDTO dto) throws ParseException;
 
     LoginResultVO  login(LoginDTO loginDTO, HttpSession session);
 
@@ -44,4 +44,6 @@ public interface ClassService {
     List<AssignmentStatusVO> getAssignmentStatus(int classId);
 
     String register(RegisterDTO registerDTO);
+
+    Result deleteAssignment(int assignmentId);
 }

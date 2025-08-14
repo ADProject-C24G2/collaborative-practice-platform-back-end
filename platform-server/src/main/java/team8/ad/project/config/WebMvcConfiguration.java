@@ -61,6 +61,8 @@ public class WebMvcConfiguration extends WebMvcConfigurationSupport {
                         "/student/register",         // 注册放行
                         "/student/recommendQuestion",
                         "/error",
+                        "/student/register",
+                        "/student/recommendQuestion",
                         // 文档/静态资源放行
                         "/doc.html",
                         "/webjars/**",
