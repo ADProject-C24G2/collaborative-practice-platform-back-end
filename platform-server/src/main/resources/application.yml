@@ -21,7 +21,7 @@ platform:
     port: 3306
     database: collaborative_practice_platform
     username: root
-    password: wqx021201
+    password: 123456
 
 # 机器学习服务的地址（可用环境变量 python.base.url 覆盖）
 ml:

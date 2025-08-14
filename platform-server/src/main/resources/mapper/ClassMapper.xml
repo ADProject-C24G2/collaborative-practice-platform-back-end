@@ -182,7 +182,7 @@
                 JOIN
             user_class_details ucd ON u.id = ucd.student_id
         WHERE
-            ucd.class_id = #{classId}
+            ucd.class_id = #{classId} AND u.user_type != 'teacher'
     </select>
 
     <delete id="deleteStudentFromClassDetails">

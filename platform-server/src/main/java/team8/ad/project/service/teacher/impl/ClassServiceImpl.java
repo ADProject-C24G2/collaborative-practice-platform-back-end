@@ -524,35 +524,39 @@ public class ClassServiceImpl implements ClassService {
         int studentId = studentDTO.getId();
         int classId = studentDTO.getClassId();
 
-        try {
-            log.info("Starting process to remove student {} from class {}.", studentId, classId);
+        String userType = classMapper.getTeacherProfile(studentDTO.getId()).getUserType();
+        if(userType.equals("student")) {
+            try {
+                log.info("Starting process to remove student {} from class {}.", studentId, classId);
 
-            // Step 1: Delete assignment submissions for this student in this class.
-            int submissionsDeleted = classMapper.deleteStudentSubmissionsInClass(studentId, classId);
-            log.info("Deleted {} submission records for student {} in class {}.", submissionsDeleted, studentId, classId);
+                // Step 1: Delete assignment submissions for this student in this class.
+                int submissionsDeleted = classMapper.deleteStudentSubmissionsInClass(studentId, classId);
+                log.info("Deleted {} submission records for student {} in class {}.", submissionsDeleted, studentId, classId);
 
-            // Step 2: Delete announcements for this student in this class.
-            int announcementsDeleted = classMapper.deleteStudentAnnouncementsInClass(studentId, classId);
-            log.info("Deleted {} announcement records for student {} in class {}.", announcementsDeleted, studentId, classId);
+                // Step 2: Delete announcements for this student in this class.
+                int announcementsDeleted = classMapper.deleteStudentAnnouncementsInClass(studentId, classId);
+                log.info("Deleted {} announcement records for student {} in class {}.", announcementsDeleted, studentId, classId);
 
-            // Step 3: Delete the main link between the student and the class.
-            int linkDeleted = classMapper.deleteStudentFromClassDetails(studentId, classId);
+                // Step 3: Delete the main link between the student and the class.
+                int linkDeleted = classMapper.deleteStudentFromClassDetails(studentId, classId);
 
-            if (linkDeleted == 0) {
-                // This means the student wasn't in the class to begin with.
-                // The transaction will roll back the other deletes, which is fine.
-                log.warn("Student {} was not found in class {}. No records were removed.", studentId, classId);
-                return Result.error("Student not found in this class.");
+                if (linkDeleted == 0) {
+                    // This means the student wasn't in the class to begin with.
+                    // The transaction will roll back the other deletes, which is fine.
+                    log.warn("Student {} was not found in class {}. No records were removed.", studentId, classId);
+                    return Result.error("Student not found in this class.");
+                }
+
+                log.info("Successfully removed student {} from class {}.", studentId, classId);
+                return Result.success("Student removed from class successfully.");
+
+            } catch (Exception e) {
+                log.error("Error removing student {} from class {}:", studentId, classId, e);
+                // Thanks to @Transactional, any partial changes will be automatically rolled back.
+                throw new RuntimeException("An unexpected error occurred while removing the student.", e);
             }
-
-            log.info("Successfully removed student {} from class {}.", studentId, classId);
-            return Result.success("Student removed from class successfully.");
-
-        } catch (Exception e) {
-            log.error("Error removing student {} from class {}:", studentId, classId, e);
-            // Thanks to @Transactional, any partial changes will be automatically rolled back.
-            throw new RuntimeException("An unexpected error occurred while removing the student.", e);
         }
+        return Result.error("You can not delete teacher");
     }
 
 
