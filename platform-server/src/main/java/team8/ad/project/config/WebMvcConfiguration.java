@@ -58,8 +58,6 @@ public class WebMvcConfiguration extends WebMvcConfigurationSupport {
                 .addPathPatterns("/student/**")       // 需要登录的接口
                 .excludePathPatterns(
                         "/student/login",            // 登录放行
-                        "/student/register",         // 注册放行
-                        "/student/recommendQuestion",
                         "/error",
                         "/student/register",
                         "/student/recommendQuestion",

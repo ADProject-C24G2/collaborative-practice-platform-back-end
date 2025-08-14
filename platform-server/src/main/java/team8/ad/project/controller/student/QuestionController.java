@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestBody;
 
-import team8.ad.project.context.BaseContext;
 import team8.ad.project.entity.dto.*;
 import team8.ad.project.entity.vo.LoginResultVO;
 import team8.ad.project.result.Result;
@@ -25,8 +24,6 @@ import team8.ad.project.service.student.AssignmentService;
 import team8.ad.project.service.student.ClassService;
 
 import java.math.BigDecimal;
-import java.util.Map;
-import java.util.Optional;
 
 import javax.servlet.http.HttpSession;
 
@@ -114,79 +111,23 @@ public class QuestionController {
     }
 
     // 通过全局配置url:recommend-url:来与model建立联系，需要修改application-dev.xml中的recommend-url来与ml中的url对应
-    // @PutMapping("/recommend")
-    // @ApiOperation("触发模型，并向模型提供训练样本(题目)")
-    // public Result<RecommendationDTO> getRecommend(
-    //         @RequestBody(required = false) Map<String, Object> body,
-    //         HttpSession session) {
-
-    //     log.info("获取推荐数据");
-    //     Long studentId = null;
-
-    //     // 1. 优先从 session 获取
-    //     Object sessionId = session.getAttribute("studentId");
-    //     if (sessionId instanceof Integer) {
-    //         studentId = ((Integer) sessionId).longValue();
-    //     } else if (sessionId instanceof Long) {
-    //         studentId = (Long) sessionId;
-    //     }
-
-    //     // 2. 如果 session 没有，再从 body 获取
-    //     if (studentId == null && body != null) {
-    //         Object bodyId = body.get("studentId");
-    //         if (bodyId instanceof Integer) {
-    //             studentId = ((Integer) bodyId).longValue();
-    //         } else if (bodyId instanceof Long) {
-    //             studentId = (Long) bodyId;
-    //         } else if (bodyId instanceof String) {
-    //             try {
-    //                 studentId = Long.parseLong((String) bodyId);
-    //             } catch (NumberFormatException ignored) {}
-    //         }
-    //     }
-
-    //     if (studentId == null) {
-    //         return Result.error("缺少 studentId，请先登录或在请求中传入 studentId");
-    //     }
-
-    //     RecommendationDTO dto = questionServiceImpl.getRecommendData(studentId);
-    //     return dto != null ? Result.success(dto) : Result.error("无法提供推荐数据");
-    // }
     @PutMapping("/recommend")
+    @ApiOperation("触发模型，并向模型提供训练样本(题目)")
     public Result<RecommendationDTO> getRecommend() {
-        Long sid = Optional.ofNullable(BaseContext.getCurrentId())
-                .map(Integer::longValue).orElse(null);
-        if (sid == null) {
-            return Result.error("请先登录");
-        }
-        RecommendationDTO dto = questionServiceImpl.getRecommendData(sid);
-        return Result.success(dto);
+        log.info("获取推荐数据");
+        RecommendationDTO dto = questionServiceImpl.getRecommendData();
+        return dto != null ? Result.success(dto) : Result.error("无法提供推荐数据");
     }
-
-
-    // @PostMapping("/recommendQuestion")
-    // @ApiOperation("接收推荐题目并存储")
-    // public Result<String> recommendQuestion(@RequestBody RecommendationRequestDTO dto) {
-    //     log.info("接收推荐题目: questionIds={}", dto.getQuestionIds());
-    //     if (dto.getQuestionIds() == null || dto.getQuestionIds().isEmpty()) {
-    //         return Result.error("推荐题目列表不能为空");
-    //     }
-    //     boolean success = questionServiceImpl.saveRecommendedQuestions(dto);
-    //     return success ? Result.success("推荐题目保存成功") : Result.error("推荐题目保存失败");
-    // }
 
     @PostMapping("/recommendQuestion")
     @ApiOperation("接收推荐题目并存储")
     public Result<String> recommendQuestion(@RequestBody RecommendationRequestDTO dto) {
-        log.info("接收推荐题目: studentId={}, questionIds={}", dto.getStudentId(), dto.getQuestionIds());
-        if (dto.getStudentId() == null) {
-            return Result.error("缺少 studentId");
-        }
+        log.info("接收推荐题目: questionIds={}", dto.getQuestionIds());
         if (dto.getQuestionIds() == null || dto.getQuestionIds().isEmpty()) {
             return Result.error("推荐题目列表不能为空");
         }
-        boolean ok = questionServiceImpl.saveRecommendedQuestions(dto);
-        return ok ? Result.success("推荐题目保存成功") : Result.error("推荐题目保存失败");
+        boolean success = questionServiceImpl.saveRecommendedQuestions(dto);
+        return success ? Result.success("推荐题目保存成功") : Result.error("推荐题目保存失败");
     }
 
     @GetMapping("/getRecommend")
