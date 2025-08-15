@@ -100,6 +100,9 @@ jobs:
           name: java-app-jar
           path: ${{ github.workspace }}/platform-server/target
 
+      - name: Build local Docker image
+        run: docker build -t ${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.sha_short }} .
+
       - name: Download latest frontend release asset
         uses: robinraju/release-downloader@v1.12
         with:
