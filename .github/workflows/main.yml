@@ -35,14 +35,6 @@ jobs:
         with:
           languages: 'java'
 
-      - name: Build with Maven
-        run: mvn -B clean install
-
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
-        with:
-          category: "/language:java"
-
       - name: Set Cache Week
         id: date
         run: echo "week=$(date +%Y-%U)" >> $GITHUB_OUTPUT
@@ -55,22 +47,26 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nvd-data-
 
-      - name: Run OWASP Dependency Check for SCA
+      - name: Build and Run OWASP Dependency Check for SCA
         continue-on-error: true
-        run: mvn org.owasp:dependency-check-maven:check -DnvdApiKey=${{ secrets.NVD_API_KEY }}
+        run: mvn -B clean install org.owasp:dependency-check-maven:check -DnvdApiKey=${{ secrets.NVD_API_KEY }}
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:java"
+
+      - name: Upload SCA Scan Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: all-sca-reports
+          path: '**/target/dependency-check-report.html'
 
       - name: Upload CodeQL SAST Report
         uses: actions/upload-artifact@v4
         with:
           name: codeql-sast-report
-          path: /home/runner/work/_temp/codeql_databases/java.zip
-
-      - name: Upload SCA Scan Report
-        uses: actions/upload-artifact@v4
-        with:
-          name: sca-report
-          path: 'target/dependency-check-report.html'
-          if:
+          path: /home/runner/work/collaborative-practice-platform-back-end/results/java.sarif
 
       - name: Upload JAR artifact for deployment job
         uses: actions/upload-artifact@v4
