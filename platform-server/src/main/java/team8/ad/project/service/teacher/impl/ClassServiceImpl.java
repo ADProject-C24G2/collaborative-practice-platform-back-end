@@ -383,7 +383,7 @@ public class ClassServiceImpl implements ClassService {
         // Fastjson的toJSONString方法不会抛出受检异常，代码更简洁
         String choicesAsJson = JSON.toJSONString(questionDTO.getOptions());
         questionEntity.setChoices(choicesAsJson);
-        questionEntity.setAnswer(Integer.parseInt(questionDTO.getAnswer()));
+        questionEntity.setAnswer(Integer.parseInt(questionDTO.getAnswer())-1);
         classMapper.insertQuestion(questionEntity);
         log.info("Successfully inserted question with id: {}", questionEntity.getId());
 
